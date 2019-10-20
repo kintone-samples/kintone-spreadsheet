@@ -1,0 +1,43 @@
+{
+  "name": "kintone_plugin_spreadsheet",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "license": "MIT",
+  "scripts": {
+    "webpack": "webpack",
+    "package": "source .env && echo PPK=$PPK && kintone-plugin-packer src --ppk $PPK",
+    "upload": "source .env && kintone-plugin-uploader --domain $DOMAIN --username $USERNAME --password $PASSWORD plugin.zip",
+    "build": "yarn webpack && yarn package",
+    "watch": "yarn webpack --watch ; yarn package --watch ; yarn upload --watch"
+  },
+  "dependencies": {
+    "react": "^16.9.0",
+    "react-dom": "^16.9.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.6.0",
+    "@kintone/plugin-packer": "^2.0.3",
+    "@kintone/plugin-uploader": "^3.0.3",
+    "@types/node": "^12.7.5",
+    "@types/terser-webpack-plugin": "^1.2.1",
+    "@types/webpack": "^4.39.1",
+    "@typescript-eslint/eslint-plugin": "^2.3.0",
+    "@typescript-eslint/parser": "^2.3.0",
+    "eslint-config-prettier": "^6.3.0",
+    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-jest": "^22.17.0",
+    "eslint-plugin-prettier": "^3.1.1",
+    "eslint-plugin-react": "^7.14.3",
+    "jest": "^24.9.0",
+    "path": "^0.12.7",
+    "prettier": "^1.18.2",
+    "prettier-eslint": "^9.0.0",
+    "prettier-stylelint": "^0.4.2",
+    "terser-webpack-plugin": "^2.1.0",
+    "ts-loader": "^6.1.0",
+    "ts-node": "^8.4.1",
+    "typescript": "^3.6.3",
+    "webpack": "^4.40.2",
+    "webpack-cli": "^3.3.9"
+  }
+}

@@ -1,0 +1,5 @@
+node_modules
+dist
+*.ppk
+plugin.zip
+yarn-error.log

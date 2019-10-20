@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "baseUrl": "./src",
+    "paths": {
+      "~/app/*": ["app/*"]
+    },
+    "target": "es5",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strictNullChecks": true,
+    "removeComments": false,
+    "noUnusedLocals": false,
+    "downlevelIteration": true,
+    "jsx": "react",
+    "lib": ["dom", "es2019"]
+  }
+}
