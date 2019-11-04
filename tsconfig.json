@@ -15,5 +15,7 @@
     "downlevelIteration": true,
     "jsx": "react",
     "lib": ["dom", "es2019"]
-  }
+  },
+  "files": ["./node_modules/@kintone/dts-gen/kintone.d.ts"],
+  "include": ["./src/**/*"]
 }

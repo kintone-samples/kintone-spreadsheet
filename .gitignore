@@ -3,3 +3,4 @@ dist
 *.ppk
 plugin.zip
 yarn-error.log
+.env
