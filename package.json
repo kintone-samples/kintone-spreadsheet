@@ -11,18 +11,24 @@
     "watch": "yarn webpack --watch ; yarn package --watch ; yarn upload --watch"
   },
   "dependencies": {
+    "@handsontable/react": "^3.0.0",
+    "handsontable": "^7.2.1",
     "react": "^16.9.0",
     "react-dom": "^16.9.0"
   },
   "devDependencies": {
     "@babel/core": "^7.6.0",
+    "@kintone/dts-gen": "^2.1.0",
     "@kintone/plugin-packer": "^2.0.3",
     "@kintone/plugin-uploader": "^3.0.3",
     "@types/node": "^12.7.5",
+    "@types/react": "^16.9.9",
+    "@types/react-dom": "^16.9.2",
     "@types/terser-webpack-plugin": "^1.2.1",
     "@types/webpack": "^4.39.1",
     "@typescript-eslint/eslint-plugin": "^2.3.0",
     "@typescript-eslint/parser": "^2.3.0",
+    "css-loader": "^3.2.0",
     "eslint-config-prettier": "^6.3.0",
     "eslint-plugin-import": "^2.18.2",
     "eslint-plugin-jest": "^22.17.0",
@@ -33,6 +39,7 @@
     "prettier": "^1.18.2",
     "prettier-eslint": "^9.0.0",
     "prettier-stylelint": "^0.4.2",
+    "style-loader": "^1.0.0",
     "terser-webpack-plugin": "^2.1.0",
     "ts-loader": "^6.1.0",
     "ts-node": "^8.4.1",
