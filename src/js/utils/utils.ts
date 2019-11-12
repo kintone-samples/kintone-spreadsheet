@@ -52,13 +52,13 @@ export const getColumnData = async (columns: string[]) => {
       columnData.source = Object.keys(resp.properties[column].options);
     }
 
-    // if (resp.properties[column].type === "USER_SELECT") {
-    //   columnData.renderer = utils.userSelectRenderer;
-    // }
+    if (resp.properties[column].type === "USER_SELECT") {
+      columnData.renderer = userSelectRenderer;
+    }
 
-    // if (resp.properties[column].type === "CHECK_BOX") {
-    //   columnData.renderer = utils.checkboxRenderer;
-    // }
+    if (resp.properties[column].type === "CHECK_BOX") {
+      columnData.renderer = checkboxRenderer;
+    }
 
     // set read only
     if (
@@ -82,4 +82,34 @@ export const getColumnData = async (columns: string[]) => {
   });
 
   return { colHeaders, columnDatas, dataSchema };
+};
+
+const userSelectRenderer: Handsonlable.renderers.BaseRenderer = (
+  instance,
+  td,
+  row,
+  col,
+  prop,
+  value,
+  cellProperties
+) => {
+  if (!value) return td;
+  td.innerText = value.map(v => v.name).join(", ");
+  td.style.color = "#777";
+  return td;
+};
+
+const checkboxRenderer: Handsonlable.renderers.Checkbox = (
+  instance,
+  td,
+  row,
+  col,
+  prop,
+  value,
+  cellProperties
+) => {
+  if (!value.length) return td;
+  td.innerText = value.join(", ");
+  td.style.color = "#777";
+  return td;
 };
