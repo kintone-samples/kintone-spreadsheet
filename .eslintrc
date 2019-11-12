@@ -1,0 +1,61 @@
+{
+  "extends": [
+    "eslint:recommended",
+    "plugin:jest/recommended",
+    "plugin:react/recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:import/typescript",
+    "prettier/@typescript-eslint",
+    "prettier/react",
+    "plugin:prettier/recommended"
+  ],
+  "plugins": ["@typescript-eslint", "react", "import", "jest", "react-hooks"],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "sourceType": "module",
+    "project": "./tsconfig.json",
+    "ecmaFeatures": {
+      "jsx": true
+    }
+  },
+  "rules": {
+    "@typescript-eslint/prefer-function-type": "off",
+    "@typescript-eslint/interface-name-prefix": ["error", "never"],
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/explicit-function-return-type": "off",
+    "@typescript-eslint/no-use-before-define": "off",
+    "no-unused-vars": [
+      "warn",
+      {
+        "vars": "all",
+        "args": "after-used",
+        "ignoreRestSiblings": false
+      }
+    ],
+    "curly": ["error", "multi-line"],
+    "react/jsx-boolean-value": ["error", "never"],
+    "react/prop-types": "off",
+    "max-len": ["error", { "code": 120, "ignorePattern": "^import |^export {(.*?)}" }],
+    "no-console": ["error", { "allow": ["warn", "error"] }],
+    "import/order": "error",
+    "sort-keys": "off",
+    "no-restricted-imports": ["error", { "patterns": ["../*"] }],
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "error",
+    "eqeqeq": ["error", "smart"],
+    "quotes": ["error", "single"]
+  },
+  "settings": {
+    "react": {
+      "version": "16.9.0"
+    }
+  },
+  "env": {
+    "browser": true,
+    "node": true,
+    "es6": true
+  },
+  "globals": {
+    "kintone": true
+  }
+}
