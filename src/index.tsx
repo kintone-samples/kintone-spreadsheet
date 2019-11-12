@@ -4,10 +4,10 @@ import { HotTable } from "@handsontable/react";
 import "handsontable/dist/handsontable.full.css";
 import { getColumnData } from "./js/utils/utils";
 
-(PLUGIN_ID => {
+(() => {
   kintone.events.on("app.record.index.show", event => {
     // 試しに列は固定
-    const columns = ["text"];
+    const columns = ["text", "checkbox", "user"];
 
     (async () => {
       const { records } = await kintone.api(
@@ -32,4 +32,4 @@ import { getColumnData } from "./js/utils/utils";
       );
     })();
   });
-})(kintone.$PLUGIN_ID);
+})();
