@@ -13,5 +13,9 @@
   "icon": "image/icon.png",
   "desktop": {
     "js": ["dist/main.bundle.js", "dist/vendor.bundle.js"]
+  },
+  "config": {
+    "html": "html/config.html",
+    "js": ["dist/config.bundle.js"]
   }
 }
