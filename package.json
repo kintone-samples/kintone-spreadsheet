@@ -8,7 +8,14 @@
     "package": "source .env && echo PPK=$PPK && kintone-plugin-packer src --ppk $PPK",
     "upload": "source .env && kintone-plugin-uploader --domain $DOMAIN --username $USERNAME --password $PASSWORD plugin.zip",
     "build": "yarn webpack && yarn package",
-    "watch": "yarn webpack --watch ; yarn package --watch ; yarn upload --watch"
+    "watch": "yarn webpack --watch ; yarn package --watch ; yarn upload --watch",
+    "lint": "yarn eslint src/**/*.tsx src/**/*.ts"
+  },
+  "prettier": {
+    "singleQuote": true,
+    "arrowParens": "always",
+    "trailingComma": "all",
+    "printWidth": 120
   },
   "dependencies": {
     "@handsontable/react": "^3.0.0",
@@ -34,6 +41,7 @@
     "eslint-plugin-jest": "^22.17.0",
     "eslint-plugin-prettier": "^3.1.1",
     "eslint-plugin-react": "^7.14.3",
+    "eslint-plugin-react-hooks": "^2.2.0",
     "jest": "^24.9.0",
     "path": "^0.12.7",
     "prettier": "^1.19.1",
