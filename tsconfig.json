@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
-    "baseUrl": "./src",
+    "baseUrl": ".",
     "paths": {
-      "~/app/*": ["app/*"]
+      "~/src/*": ["src/*"]
     },
     "target": "es5",
     "module": "commonjs",

@@ -1,0 +1,6 @@
+.form-control {
+  display: flex;
+  :last-child {
+    margin-left: 10px;
+  }
+}
