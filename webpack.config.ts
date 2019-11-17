@@ -1,6 +1,7 @@
 import path from 'path';
 import { Configuration } from 'webpack';
 import TerserPlugin from 'terser-webpack-plugin';
+import { exec } from 'child_process';
 
 const DEBUG = process.env.NODE_ENV !== 'production';
 
@@ -17,7 +18,20 @@ const config: Configuration = {
       '~/src': path.resolve(__dirname, './src'),
     },
   },
-  plugins: [],
+  plugins: [
+    {
+      // code will be packaged and uploaded automatically only watch mode
+      apply: (compiler) => {
+        compiler.hooks.afterEmit.tap('AfterEmitPlugin', (compilation) => {
+          compiler.options.watch &&
+            exec('yarn package && yarn upload', (err, stdout, stderr) => {
+              if (stdout) process.stdout.write(stdout);
+              if (stderr) process.stderr.write(stderr);
+            });
+        });
+      },
+    },
+  ],
   optimization: {
     minimizer: [
       new TerserPlugin({
@@ -32,15 +46,6 @@ const config: Configuration = {
         },
       }),
     ],
-    splitChunks: {
-      cacheGroups: {
-        commons: {
-          chunks: 'initial',
-          test: /[\\/]node_modules[\\/]/,
-          name: 'vendor',
-        },
-      },
-    },
   },
   output: {
     path: path.resolve(__dirname, 'src/dist'),
@@ -53,6 +58,10 @@ const config: Configuration = {
       {
         test: /\.(png|jpg|gif)$/,
         loader: 'file-loader',
+      },
+      {
+        test: /\.scss$/,
+        use: [{ loader: 'style-loader' }, { loader: 'css-loader' }, { loader: 'sass-loader' }],
       },
       {
         test: /\.[tj]sx?$/,
