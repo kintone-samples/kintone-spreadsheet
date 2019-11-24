@@ -1,18 +1,30 @@
-import React, { useState, useCallback, ChangeEvent } from 'react';
+import React, { useState, useCallback, ChangeEvent, useEffect, SyntheticEvent } from 'react';
 import ReactDOM from 'react-dom';
 import { Button, Text } from '@kintone/kintone-ui-component';
 import '~/src/css/51-us-default.scss';
 import './styles.scss';
+import FormFieldSelectTable, { OnChange as FormFieldSelectTableOnChange } from './FormFieldSelectTable';
 
 const useConfig = () => {
   const [elementId, setElementId] = useState('sheet');
   const onChangeElementId = useCallback((value: string | null) => setElementId(value ? value : ''), []);
+  const onSubmit = useCallback(() => {
+    console.log('submit!');
+    console.log(elementId);
+  }, []);
+  const onCancel = useCallback(() => {
+    console.log('cancel!');
+  }, []);
 
-  return { elementId, onChangeElementId };
+  const onChange = useCallback<FormFieldSelectTableOnChange>((selectedField) => {
+    console.log(selectedField);
+  }, []);
+
+  return { elementId, onChangeElementId, onChange, onSubmit, onCancel };
 };
 
 const Config: React.FC = () => {
-  const { elementId, onChangeElementId } = useConfig();
+  const { elementId, onChangeElementId, onChange, onSubmit, onCancel } = useConfig();
   return (
     <div id="form" className="colorcell-plugin">
       <div className="kintoneplugin-row">
@@ -30,9 +42,10 @@ const Config: React.FC = () => {
       </div>
       <div className="kintoneplugin-row">
         <h2 className="kintoneplugin-label">3. スプレットシートに表示したいフィールドを設定してください。</h2>
+        <FormFieldSelectTable onChange={onChange} />
       </div>
       <div className="kintoneplugin-row form-control">
-        <Button type="submit" text="保存する" /> <Button text="キャンセル" />
+        <Button type="submit" text="保存する" onClick={onSubmit} /> <Button onClick={onCancel} text="キャンセル" />
       </div>
     </div>
   );
