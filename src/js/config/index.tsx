@@ -3,28 +3,64 @@ import ReactDOM from 'react-dom';
 import { Button, Text } from '@kintone/kintone-ui-component';
 import '~/src/css/51-us-default.scss';
 import './styles.scss';
-import FormFieldSelectTable, { OnChange as FormFieldSelectTableOnChange } from './FormFieldSelectTable';
+import FormFieldSelectTable, { OnChange as FormFieldSelectTableOnChange, FormField } from './FormFieldSelectTable';
 
-const useConfig = () => {
-  const [elementId, setElementId] = useState('sheet');
-  const onChangeElementId = useCallback((value: string | null) => setElementId(value ? value : ''), []);
+interface Config {
+  elementId: string;
+  columns: FormField[];
+}
+
+const useConfig = (pluginId: string) => {
+  const restoredConfig = kintone.plugin.app.getConfig(pluginId);
+  const [config, setConfig] = useState<Config>(
+    // restore from parsed configuration
+    Object.keys(JSON.parse(restoredConfig.config)).length
+      ? JSON.parse(restoredConfig.config)
+      : {
+          elementId: 'sheet',
+          columns: [],
+        },
+  );
+
+  const onChangeElementId = useCallback(
+    (value: string | null) =>
+      setConfig((config) => ({
+        ...config,
+        elementId: value || '',
+      })),
+    [setConfig],
+  );
+
   const onSubmit = useCallback(() => {
-    console.log('submit!');
-    console.log(elementId);
-  }, []);
+    kintone.plugin.app.setConfig(
+      {
+        config: JSON.stringify({
+          elementId: config.elementId,
+          columns: config.columns,
+        }),
+      },
+      () => {},
+    );
+  }, [config]);
+
   const onCancel = useCallback(() => {
-    console.log('cancel!');
+    history.back();
   }, []);
 
-  const onChange = useCallback<FormFieldSelectTableOnChange>((selectedField) => {
-    console.log(selectedField);
-  }, []);
+  const onChange = useCallback<FormFieldSelectTableOnChange>(
+    (selectedFields) => setConfig({ ...config, columns: selectedFields }),
+    [setConfig],
+  );
 
-  return { elementId, onChangeElementId, onChange, onSubmit, onCancel };
+  return { config, onChangeElementId, onChange, onSubmit, onCancel };
 };
 
-const Config: React.FC = () => {
-  const { elementId, onChangeElementId, onChange, onSubmit, onCancel } = useConfig();
+interface Props {
+  pluginId: string;
+}
+
+const Config: React.FC<Props> = ({ pluginId }) => {
+  const { config, onChangeElementId, onChange, onSubmit, onCancel } = useConfig(pluginId);
   return (
     <div id="form" className="colorcell-plugin">
       <div className="kintoneplugin-row">
@@ -38,11 +74,11 @@ const Config: React.FC = () => {
       </div>
       <div className="kintoneplugin-row">
         <h2 className="kintoneplugin-label">2. 1で設定した要素IDを入力してください。</h2>
-        <Text value={elementId} onChange={onChangeElementId} />
+        <Text value={config.elementId} onChange={onChangeElementId} />
       </div>
       <div className="kintoneplugin-row">
         <h2 className="kintoneplugin-label">3. スプレットシートに表示したいフィールドを設定してください。</h2>
-        <FormFieldSelectTable onChange={onChange} />
+        <FormFieldSelectTable onChange={onChange} defaultSelectedFields={config.columns} />
       </div>
       <div className="kintoneplugin-row form-control">
         <Button type="submit" text="保存する" onClick={onSubmit} /> <Button onClick={onCancel} text="キャンセル" />
@@ -52,5 +88,5 @@ const Config: React.FC = () => {
 };
 
 ((PLUGIN_ID) => {
-  ReactDOM.render(<Config />, document.getElementById('kintone-spreadsheet-config'));
+  ReactDOM.render(<Config pluginId={PLUGIN_ID} />, document.getElementById('kintone-spreadsheet-config'));
 })(kintone.$PLUGIN_ID);
