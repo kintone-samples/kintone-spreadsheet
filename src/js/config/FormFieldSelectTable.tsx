@@ -1,6 +1,6 @@
 import React, { useState, useCallback, ChangeEvent, useEffect, SyntheticEvent } from 'react';
 
-interface FormField {
+export interface FormField {
   code: string;
 }
 
@@ -14,9 +14,10 @@ export interface OnChange {
 
 export interface Props {
   onChange: OnChange;
+  defaultSelectedFields: FormField[];
 }
 
-export interface SelectProps {
+interface SelectProps {
   appFields: FormField[];
   index: number;
   defaultCode: string;
@@ -44,9 +45,12 @@ const Select: React.FC<SelectProps> = ({ appFields, onChange, index, defaultCode
   );
 };
 
-const useFormFieldSelectTable = (onChange: (selectedFields: FormField[]) => void) => {
+const useFormFieldSelectTable = (
+  onChange: (selectedFields: FormField[]) => void,
+  defaultSelectedFields: FormField[],
+) => {
   const [appFields, setAppfields] = useState<FormField[]>([]);
-  const [selectedFields, setSelectedFields] = useState<FormField[]>([]);
+  const [selectedFields, setSelectedFields] = useState<FormField[]>(defaultSelectedFields);
   const onChangeSelect = useCallback(
     (event: SyntheticEvent<HTMLSelectElement>, index: number) => {
       const value = event.currentTarget.value;
@@ -70,7 +74,7 @@ const useFormFieldSelectTable = (onChange: (selectedFields: FormField[]) => void
         app: kintone.app.getId(),
       })) as FormApiResponse;
       setAppfields(properties);
-      setSelectedFields([{ code: properties[0]?.code || '' }]);
+      if (selectedFields.length === 0) setSelectedFields([{ code: properties[0]?.code || '' }]);
     })();
   }, [setAppfields, setSelectedFields]);
 
@@ -92,9 +96,10 @@ const useFormFieldSelectTable = (onChange: (selectedFields: FormField[]) => void
   return { appFields, selectedFields, onChangeSelect, onClickAddColumn, onClickRemoveColumn };
 };
 
-const FormFieldSelectTable: React.FC<Props> = ({ onChange }) => {
+const FormFieldSelectTable: React.FC<Props> = ({ onChange, defaultSelectedFields }) => {
   const { appFields, selectedFields, onChangeSelect, onClickAddColumn, onClickRemoveColumn } = useFormFieldSelectTable(
     onChange,
+    defaultSelectedFields,
   );
   return (
     <table>
