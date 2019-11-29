@@ -83,12 +83,19 @@ const useFormFieldSelectTable = (onChange: (selectedFields: FormField[]) => void
       ]),
     [appFields, setSelectedFields],
   );
+  const onClickRemoveColumn = useCallback(
+    (index: number) => () =>
+      setSelectedFields((selectedFields) => [...selectedFields.slice(0, index), ...selectedFields.slice(index + 1)]),
+    [setSelectedFields],
+  );
 
-  return { appFields, selectedFields, onChangeSelect, onClickAddColumn };
+  return { appFields, selectedFields, onChangeSelect, onClickAddColumn, onClickRemoveColumn };
 };
 
 const FormFieldSelectTable: React.FC<Props> = ({ onChange }) => {
-  const { appFields, selectedFields, onChangeSelect, onClickAddColumn } = useFormFieldSelectTable(onChange);
+  const { appFields, selectedFields, onChangeSelect, onClickAddColumn, onClickRemoveColumn } = useFormFieldSelectTable(
+    onChange,
+  );
   return (
     <table>
       <thead>
@@ -97,10 +104,8 @@ const FormFieldSelectTable: React.FC<Props> = ({ onChange }) => {
             <th key={i}>
               {i + 1} 列目
               <div className="control">
-                <button className="addColumn" onClick={onClickAddColumn(i)}>
-                  +
-                </button>
-                <button className="addColumn">-</button>
+                <button onClick={onClickAddColumn(i)}>+</button>
+                {selectedFields.length > 1 && <button onClick={onClickRemoveColumn(i)}>-</button>}
               </div>
             </th>
           ))}
