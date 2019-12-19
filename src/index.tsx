@@ -2,30 +2,33 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { HotTable } from '@handsontable/react';
 import 'handsontable/dist/handsontable.full.css';
-import { getColumnData } from './js/utils/utils';
+import { fetchAppData, fetchConfig } from './js/utils/utils';
+import { isValidConfig } from '~/src/js/config';
 
-(() => {
+((PLUGIN_ID) => {
   kintone.events.on('app.record.index.show', (event) => {
-    // 試しに列は固定
-    const columns = ['text', 'checkbox', 'user'];
-
     (async () => {
-      const { records } = await kintone.api(kintone.api.url('/k/v1/records', true), 'GET', {
-        app: kintone.app.getId(),
-      });
-      const { colHeaders, columnDatas, dataSchema } = await getColumnData(columns);
+      const config = await fetchConfig(PLUGIN_ID);
+      if (!isValidConfig(config)) {
+        alert('設定画面からプラグインの設定を行ってください');
+        return event;
+      }
+
+      const { columnData, records } = await fetchAppData(config);
       ReactDOM.render(
         <HotTable
           data={records}
           rowHeaders
-          width="600"
-          height="300"
-          colHeaders={colHeaders}
-          columns={columnDatas}
-          dataSchema={dataSchema}
+          width="100%"
+          height="100vh"
+          colHeaders={columnData.colHeaders}
+          columns={columnData.columnDatas}
+          dataSchema={columnData.dataSchema}
         />,
-        document.getElementById('app'),
+        document.getElementById(config.elementId),
       );
     })();
+
+    return event;
   });
-})();
+})(kintone.$PLUGIN_ID);
