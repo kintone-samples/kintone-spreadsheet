@@ -1,14 +1,21 @@
-import React, { useState, useCallback, ChangeEvent, useEffect, SyntheticEvent } from 'react';
+import React, { useState, useCallback } from 'react';
 import ReactDOM from 'react-dom';
 import { Button, Text } from '@kintone/kintone-ui-component';
 import '~/src/css/51-us-default.scss';
 import './styles.scss';
 import FormFieldSelectTable, { OnChange as FormFieldSelectTableOnChange, FormField } from './FormFieldSelectTable';
 
-interface Config {
+export interface Config {
   elementId: string;
   columns: FormField[];
 }
+
+export const isValidConfig = (config: any): config is Config => {
+  if ('elementId' in config && 'columns' in config && Array.isArray(config.columns)) {
+    return true;
+  }
+  return false;
+};
 
 const useConfig = (pluginId: string) => {
   const restoredConfig = kintone.plugin.app.getConfig(pluginId);
@@ -88,5 +95,6 @@ const Config: React.FC<Props> = ({ pluginId }) => {
 };
 
 ((PLUGIN_ID) => {
-  ReactDOM.render(<Config pluginId={PLUGIN_ID} />, document.getElementById('kintone-spreadsheet-config'));
+  const targetElement = document.getElementById('kintone-spreadsheet-config');
+  targetElement && ReactDOM.render(<Config pluginId={PLUGIN_ID} />, targetElement);
 })(kintone.$PLUGIN_ID);
