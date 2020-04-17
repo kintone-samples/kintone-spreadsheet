@@ -1,9 +1,11 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import ReactDOM from 'react-dom';
+import { useTranslation } from 'react-i18next';
 import { Button, Text } from '@kintone/kintone-ui-component';
 import '~/src/css/51-us-default.scss';
 import './styles.scss';
 import FormFieldSelectTable, { OnChange as FormFieldSelectTableOnChange, FormField } from './FormFieldSelectTable';
+import '~/src/js/utils/i18n';
 
 export interface Config {
   elementId: string;
@@ -18,6 +20,10 @@ export const isValidConfig = (config: any): config is Config => {
 };
 
 const useConfig = (pluginId: string) => {
+  const { t, i18n } = useTranslation();
+  useEffect(() => {
+    i18n.changeLanguage(kintone.getLoginUser().language);
+  }, [i18n]);
   const restoredConfig = kintone.plugin.app.getConfig(pluginId);
   const [config, setConfig] = useState<Config>(
     // restore from parsed configuration
@@ -56,10 +62,10 @@ const useConfig = (pluginId: string) => {
 
   const onChange = useCallback<FormFieldSelectTableOnChange>(
     (selectedFields) => setConfig({ ...config, columns: selectedFields }),
-    [setConfig],
+    [config],
   );
 
-  return { config, onChangeElementId, onChange, onSubmit, onCancel };
+  return { config, onChangeElementId, onChange, onSubmit, onCancel, t };
 };
 
 interface Props {
@@ -67,28 +73,29 @@ interface Props {
 }
 
 const Config: React.FC<Props> = ({ pluginId }) => {
-  const { config, onChangeElementId, onChange, onSubmit, onCancel } = useConfig(pluginId);
+  const { config, onChangeElementId, onChange, onSubmit, onCancel, t } = useConfig(pluginId);
   return (
     <div id="form" className="colorcell-plugin">
       <div className="kintoneplugin-row">
-        <h2 className="kintoneplugin-label">1. カスタマイズビューを作成してください。</h2>
-        <p>カスタマイズビューを作成し、下記例のようにスプレットシートのための要素を用意してください。</p>
-        <a href="https://help.cybozu.com/ja/k/user/set_view.html" target="_blank">
-          kintone ユーザーヘルプ: 一覧を設定する
+        <h2 className="kintoneplugin-label">{t('config.section1.header')}</h2>
+        <p>{t('config.section1.body')}</p>
+        <a href="https://help.cybozu.com/ja/k/user/set_view.html" target="_blank" rel="noopener noreferrer">
+          {t('config.section1.link_text')}
         </a>
-        <p>例）</p>
+        <p>{t('config.section1.example')}</p>
         <pre>{'<div id="sheet">'}</pre>
       </div>
       <div className="kintoneplugin-row">
-        <h2 className="kintoneplugin-label">2. 1で設定した要素IDを入力してください。</h2>
+        <h2 className="kintoneplugin-label">{t('config.section2.header')}</h2>
         <Text value={config.elementId} onChange={onChangeElementId} />
       </div>
       <div className="kintoneplugin-row">
-        <h2 className="kintoneplugin-label">3. スプレットシートに表示したいフィールドを設定してください。</h2>
+        <h2 className="kintoneplugin-label">{t('config.section3.header')}</h2>
         <FormFieldSelectTable onChange={onChange} defaultSelectedFields={config.columns} />
       </div>
       <div className="kintoneplugin-row form-control">
-        <Button type="submit" text="保存する" onClick={onSubmit} /> <Button onClick={onCancel} text="キャンセル" />
+        <Button type="submit" text={t('common.save')} onClick={onSubmit} />{' '}
+        <Button onClick={onCancel} text={t('common.cancel')} />
       </div>
     </div>
   );
