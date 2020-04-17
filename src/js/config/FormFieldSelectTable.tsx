@@ -26,9 +26,12 @@ interface SelectProps {
 
 const Select: React.FC<SelectProps> = ({ appFields, onChange, index, defaultCode }) => {
   // Give index number
-  const onChangeHandler = useCallback((event) => {
-    onChange(event, index);
-  }, []);
+  const onChangeHandler = useCallback(
+    (event) => {
+      onChange(event, index);
+    },
+    [index, onChange],
+  );
 
   return (
     <div className="kintoneplugin-input-outer">
@@ -66,7 +69,7 @@ const useFormFieldSelectTable = (
 
   useEffect(() => {
     onChange(selectedFields);
-  }, [selectedFields]);
+  }, [onChange, selectedFields]);
 
   useEffect(() => {
     (async () => {
@@ -76,7 +79,7 @@ const useFormFieldSelectTable = (
       setAppfields(properties);
       if (selectedFields.length === 0) setSelectedFields([{ code: properties[0]?.code || '' }]);
     })();
-  }, [setAppfields, setSelectedFields]);
+  }, [selectedFields.length, setAppfields, setSelectedFields]);
 
   const onClickAddColumn = useCallback(
     (index: number) => () =>

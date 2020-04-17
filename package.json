@@ -21,8 +21,10 @@
     "@handsontable/react": "^3.0.0",
     "@kintone/kintone-ui-component": "^0.4.3",
     "handsontable": "^7.2.1",
+    "i18next": "^19.4.2",
     "react": "^16.9.0",
-    "react-dom": "^16.9.0"
+    "react-dom": "^16.9.0",
+    "react-i18next": "^11.3.4"
   },
   "devDependencies": {
     "@babel/core": "^7.6.0",
