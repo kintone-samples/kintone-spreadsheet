@@ -20,6 +20,7 @@
   "dependencies": {
     "@handsontable/react": "^3.0.0",
     "@kintone/kintone-ui-component": "^0.4.3",
+    "@kintone/rest-api-client": "^1.2.0",
     "handsontable": "^7.2.1",
     "react": "^16.9.0",
     "react-dom": "^16.9.0"
@@ -56,6 +57,7 @@
     "ts-node": "^8.4.1",
     "typescript": "^3.7.2",
     "webpack": "^4.40.2",
+    "webpack-bundle-analyzer": "^3.8.0",
     "webpack-cli": "^3.3.9"
   }
 }

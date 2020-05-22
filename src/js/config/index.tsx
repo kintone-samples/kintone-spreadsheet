@@ -56,7 +56,7 @@ const useConfig = (pluginId: string) => {
 
   const onChange = useCallback<FormFieldSelectTableOnChange>(
     (selectedFields) => setConfig({ ...config, columns: selectedFields }),
-    [setConfig],
+    [config],
   );
 
   return { config, onChangeElementId, onChange, onSubmit, onCancel };
