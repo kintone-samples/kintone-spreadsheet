@@ -159,6 +159,4 @@ export function saveAfterChange(changes: Handsontable.CellChange[] | null, sourc
   ];
 
   return client.bulkRequest({ requests });
-
-  // return kintone.api('/k/v1/bulkRequest', 'POST', { requests: requests });
 }
