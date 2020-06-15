@@ -17,9 +17,21 @@ import { isValidConfig } from '~/src/js/config';
       if (!containerElement) return event;
 
       const { columnData, records } = await fetchAppData(config);
+      const hot = React.createRef<HotTable>();
+
+      const autoload = () => {
+        setTimeout(async () => {
+          const { columnData, records } = await fetchAppData(config);
+          hot.current?.hotInstance.loadData(records);
+          autoload();
+        }, 10000); // 10秒。APIの呼び出し数の上限があるので、必要に応じて変更してください。
+      };
+
+      autoload();
 
       ReactDOM.render(
         <HotTable
+          ref={hot}
           data={records}
           rowHeaders
           width="100%"

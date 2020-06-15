@@ -73,7 +73,7 @@ const Config: React.FC<Props> = ({ pluginId }) => {
       <div className="kintoneplugin-row">
         <h2 className="kintoneplugin-label">1. カスタマイズビューを作成してください。</h2>
         <p>カスタマイズビューを作成し、下記例のようにスプレットシートのための要素を用意してください。</p>
-        <a href="https://help.cybozu.com/ja/k/user/set_view.html" target="_blank">
+        <a href="https://help.cybozu.com/ja/k/user/set_view.html" target="_blank" rel="noopener noreferrer">
           kintone ユーザーヘルプ: 一覧を設定する
         </a>
         <p>例）</p>
