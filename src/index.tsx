@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { HotTable } from '@handsontable/react';
 import 'handsontable/dist/handsontable.full.css';
-import { fetchAppData, fetchConfig, saveAfterChange } from './js/utils/utils';
+import { fetchAppData, fetchConfig, saveAfterChange, beforeRemoveRow } from './js/utils/utils';
 import { isValidConfig } from '~/src/js/config';
 
 ((PLUGIN_ID) => {
@@ -34,12 +34,15 @@ import { isValidConfig } from '~/src/js/config';
           ref={hot}
           data={records}
           rowHeaders
+          contextMenu={['remove_row']}
+          minSpareRows={1}
           width="100%"
           height="100vh"
           colHeaders={columnData.colHeaders}
           columns={columnData.columnDatas}
           dataSchema={columnData.dataSchema}
           afterChange={saveAfterChange}
+          beforeRemoveRow={beforeRemoveRow}
         />,
         document.getElementById(config.elementId),
       );
