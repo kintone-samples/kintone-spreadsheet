@@ -112,6 +112,7 @@ export const fetchConfig = async (PLUGIN_ID: string): Promise<Config | null> => 
 };
 
 export const fetchAppData = async (config: Config) => {
+  // TODO: kintone rest api client使う
   const { records } = await kintone.api(kintone.api.url('/k/v1/records', true), 'GET', {
     app: kintone.app.getId(),
   });
@@ -121,7 +122,7 @@ export const fetchAppData = async (config: Config) => {
   return { records, columnData };
 };
 
-export function saveAfterChange(changes: Handsontable.CellChange[] | null, source: Handsontable.ChangeSource) {
+export async function saveAfterChange(changes: Handsontable.CellChange[] | null, source: Handsontable.ChangeSource) {
   const hot = this as Handsontable;
   const sourceData = hot.getSourceData();
 
@@ -158,5 +159,22 @@ export function saveAfterChange(changes: Handsontable.CellChange[] | null, sourc
     },
   ];
 
-  return client.bulkRequest({ requests });
+  // TODO: kintone rest api client使う
+  await client.bulkRequest({ requests });
+  const { records } = await kintone.api(kintone.api.url('/k/v1/records', true), 'GET', {
+    app: kintone.app.getId(),
+  });
+  hot.loadData(records);
+}
+
+export async function beforeRemoveRow(index: number, amount: number) {
+  const hot = this as Handsontable;
+  const sourceData = hot.getSourceData();
+  const ids = sourceData.slice(index, index + amount).map((record) => record.$id.value);
+  // TODO: kintone rest api client使う
+  await kintone.api('/k/v1/records', 'DELETE', { app: kintone.app.getId(), ids });
+  const { records } = await kintone.api(kintone.api.url('/k/v1/records', true), 'GET', {
+    app: kintone.app.getId(),
+  });
+  hot.loadData(records);
 }
