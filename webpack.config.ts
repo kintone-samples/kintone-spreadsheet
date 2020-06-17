@@ -11,7 +11,7 @@ const config: Configuration = {
   devtool: DEBUG ? 'cheap-module-eval-source-map' : undefined,
   entry: {
     main: './src/index.tsx',
-    config: './src/js/config',
+    config: './src/js/config/index.tsx',
   },
   resolve: {
     extensions: ['.ts', '.tsx', '.js', '.json'],
