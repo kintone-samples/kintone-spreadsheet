@@ -1,0 +1,20 @@
+{
+  "common": {
+    "save": "保存",
+    "cancel": "取消"
+  },
+  "config": {
+    "section1": {
+      "header": "1. 创建自定义列表。",
+      "body": "创建自定义列表，准备如下电子表格所需的元素。",
+      "link_text": "kintone 帮助:设置列表",
+      "example": "例）"
+    },
+    "section2": {
+      "header": "2. 输入步骤1中准备的元素ID。"
+    },
+    "section3": {
+      "header": "3. 设置需要在电子表格中显示的字段。"
+    }
+  }
+}
