@@ -1,14 +1,6 @@
-import Handsonlable from 'handsontable';
+import Handsontable from 'handsontable';
 import { Config } from '~/src/js/config';
-const ALLOWED_FIELD_TYPES = [
-  'RECORD_NUMBER',
-  'CREATED_TIME',
-  'UPDATED_TIME',
-  'CREATOR',
-  'MODIFIER',
-  'STATUS',
-  'STATUS_ASSIGNEE',
-];
+import { client } from '~/src/js/utils/client';
 const ARRAY_FIELDS = [
   'CHECK_BOX',
   'MULTI_SELECT',
@@ -20,7 +12,13 @@ const ARRAY_FIELDS = [
   'GROUP_SELECT',
 ];
 const NOT_ALLOWED_EDIT_FIELDS = [
-  'USER_SELECT',
+  'RECORD_NUMBER',
+  'CREATED_TIME',
+  'UPDATED_TIME',
+  'CREATOR',
+  'MODIFIER',
+  'STATUS',
+  'STATUS_ASSIGNEE',
   'CALC',
   'CHECK_BOX',
   'MULTI_SELECT',
@@ -30,6 +28,16 @@ const NOT_ALLOWED_EDIT_FIELDS = [
   'ORGANIZATION_SELECT',
   'GROUP_SELECT',
 ];
+
+const excludeNonEditableFields = (record) => {
+  const result = {};
+  for (const prop in record) {
+    if (NOT_ALLOWED_EDIT_FIELDS.indexOf(record[prop].type) === -1) {
+      result[prop] = record[prop];
+    }
+  }
+  return result;
+};
 
 export const getColumnData = async (config: Config) => {
   const resp = await kintone.api('/k/v1/app/form/fields', 'GET', {
@@ -41,8 +49,8 @@ export const getColumnData = async (config: Config) => {
   });
 
   // 各セルの設定
-  const columnDatas: Handsonlable.ColumnSettings[] = config.columns.map(({ code }) => {
-    const columnData: Handsonlable.ColumnSettings = { data: `${code}.value` };
+  const columnDatas: Handsontable.ColumnSettings[] = config.columns.map(({ code }) => {
+    const columnData: Handsontable.ColumnSettings = { data: `${code}.value` };
 
     // if type is DROP_DOWN, add type and source property
     if (resp.properties[code].type === 'DROP_DOWN' || resp.properties[code].type === 'RADIO_BUTTON') {
@@ -59,21 +67,21 @@ export const getColumnData = async (config: Config) => {
     }
 
     // set read only
-    if (ALLOWED_FIELD_TYPES.concat(NOT_ALLOWED_EDIT_FIELDS).indexOf(resp.properties[code].type) !== -1) {
+    if (NOT_ALLOWED_EDIT_FIELDS.indexOf(resp.properties[code].type) !== -1) {
       columnData.readOnly = true;
     }
     return columnData;
   });
 
   // データスキーマの作成
-  const dataSchema: Handsonlable.RowObject = config.columns.reduce((prev, { code }) => {
+  const dataSchema: Handsontable.RowObject = config.columns.reduce((prev, { code }) => {
     return { ...prev, [code]: { type: resp.properties[code].type, value: resp.properties[code].defaultValue } };
   }, {});
 
   return { colHeaders, columnDatas, dataSchema };
 };
 
-const userSelectRenderer: Handsonlable.renderers.BaseRenderer = (
+const userSelectRenderer: Handsontable.renderers.BaseRenderer = (
   instance,
   td,
   row,
@@ -88,7 +96,7 @@ const userSelectRenderer: Handsonlable.renderers.BaseRenderer = (
   return td;
 };
 
-const checkboxRenderer: Handsonlable.renderers.Checkbox = (instance, td, row, col, prop, value, cellProperties) => {
+const checkboxRenderer: Handsontable.renderers.Checkbox = (instance, td, row, col, prop, value, cellProperties) => {
   if (!value.length) return td;
   td.innerText = value.join(', ');
   td.style.color = '#777';
@@ -104,6 +112,7 @@ export const fetchConfig = async (PLUGIN_ID: string): Promise<Config | null> => 
 };
 
 export const fetchAppData = async (config: Config) => {
+  // TODO: kintone rest api client使う
   const { records } = await kintone.api(kintone.api.url('/k/v1/records', true), 'GET', {
     app: kintone.app.getId(),
   });
@@ -112,3 +121,60 @@ export const fetchAppData = async (config: Config) => {
 
   return { records, columnData };
 };
+
+export async function saveAfterChange(changes: Handsontable.CellChange[] | null, source: Handsontable.ChangeSource) {
+  const hot = this as Handsontable;
+  const sourceData = hot.getSourceData();
+
+  // データ読み込み時はイベントを終了
+  if (source === 'loadData' || !changes) return;
+
+  const changedRows = changes.map((row) => row[0]).filter((x, i, arr) => arr.indexOf(x) === i);
+
+  // FIXME: ここらへんはSourceData起点がいいかもしれない
+  const insertRecords = changedRows
+    .filter((row) => !sourceData[row]?.$id?.value)
+    .map((row) => excludeNonEditableFields(sourceData[row]));
+
+  const updateRecords = changedRows
+    .filter((row) => sourceData[row]?.$id?.value)
+    .map((row) => ({ id: sourceData[row].$id.value, record: excludeNonEditableFields(sourceData[row]) }));
+
+  const requests = [
+    {
+      method: 'PUT',
+      api: '/k/v1/records.json',
+      payload: {
+        app: kintone.app.getId(),
+        records: updateRecords,
+      },
+    },
+    {
+      method: 'POST',
+      api: '/k/v1/records.json',
+      payload: {
+        app: kintone.app.getId(),
+        records: insertRecords,
+      },
+    },
+  ];
+
+  // TODO: kintone rest api client使う
+  await client.bulkRequest({ requests });
+  const { records } = await kintone.api(kintone.api.url('/k/v1/records', true), 'GET', {
+    app: kintone.app.getId(),
+  });
+  hot.loadData(records);
+}
+
+export async function beforeRemoveRow(index: number, amount: number) {
+  const hot = this as Handsontable;
+  const sourceData = hot.getSourceData();
+  const ids = sourceData.slice(index, index + amount).map((record) => record.$id.value);
+  // TODO: kintone rest api client使う
+  await kintone.api('/k/v1/records', 'DELETE', { app: kintone.app.getId(), ids });
+  const { records } = await kintone.api(kintone.api.url('/k/v1/records', true), 'GET', {
+    app: kintone.app.getId(),
+  });
+  hot.loadData(records);
+}
