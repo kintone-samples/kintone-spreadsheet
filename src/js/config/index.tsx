@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import ReactDOM from 'react-dom';
-import { Button, Text } from '@kintone/kintone-ui-component';
+import { Button, Text, Alert } from '@kintone/kintone-ui-component';
 import '~/src/css/51-us-default.scss';
 import './styles.scss';
 import FormFieldSelectTable, { OnChange as FormFieldSelectTableOnChange, FormField } from './FormFieldSelectTable';
@@ -21,13 +21,14 @@ const useConfig = (pluginId: string) => {
   const restoredConfig = kintone.plugin.app.getConfig(pluginId);
   const [config, setConfig] = useState<Config>(
     // restore from parsed configuration
-    Object.keys(JSON.parse(restoredConfig.config)).length
+    restoredConfig.config && Object.keys(JSON.parse(restoredConfig.config)).length
       ? JSON.parse(restoredConfig.config)
       : {
           elementId: 'sheet',
           columns: [],
         },
   );
+  const [showAlert, setShowAlert] = useState<boolean>(false);
 
   const onChangeElementId = useCallback(
     (value: string | null) =>
@@ -38,7 +39,9 @@ const useConfig = (pluginId: string) => {
     [setConfig],
   );
 
+  // TODO: Loadingなど表示
   const onSubmit = useCallback(() => {
+    setShowAlert(false);
     kintone.plugin.app.setConfig(
       {
         config: JSON.stringify({
@@ -46,7 +49,9 @@ const useConfig = (pluginId: string) => {
           columns: config.columns,
         }),
       },
-      () => {},
+      () => {
+        setShowAlert(true);
+      },
     );
   }, [config]);
 
@@ -55,11 +60,19 @@ const useConfig = (pluginId: string) => {
   }, []);
 
   const onChange = useCallback<FormFieldSelectTableOnChange>(
-    (selectedFields) => setConfig({ ...config, columns: selectedFields }),
-    [config],
+    (selectedFields) => setConfig((config) => ({ ...config, columns: selectedFields })),
+    [],
   );
 
-  return { config, onChangeElementId, onChange, onSubmit, onCancel };
+  return {
+    config,
+    onChangeElementId,
+    onChange,
+    onSubmit,
+    onCancel,
+    showAlert,
+    onClickAlert: useCallback(() => setShowAlert(false), []),
+  };
 };
 
 interface Props {
@@ -67,7 +80,7 @@ interface Props {
 }
 
 const Config: React.FC<Props> = ({ pluginId }) => {
-  const { config, onChangeElementId, onChange, onSubmit, onCancel } = useConfig(pluginId);
+  const { config, onChangeElementId, onChange, onSubmit, onCancel, showAlert, onClickAlert } = useConfig(pluginId);
   return (
     <div id="form" className="colorcell-plugin">
       <div className="kintoneplugin-row">
@@ -90,6 +103,7 @@ const Config: React.FC<Props> = ({ pluginId }) => {
       <div className="kintoneplugin-row form-control">
         <Button type="submit" text="保存する" onClick={onSubmit} /> <Button onClick={onCancel} text="キャンセル" />
       </div>
+      <Alert text="設定を保存しました" type="success" isVisible={showAlert} onClick={onClickAlert} />
     </div>
   );
 };
