@@ -2,6 +2,7 @@ import path from 'path';
 import { Configuration } from 'webpack';
 import TerserPlugin from 'terser-webpack-plugin';
 import { exec } from 'child_process';
+import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 
 const DEBUG = process.env.NODE_ENV !== 'production';
 
@@ -10,7 +11,7 @@ const config: Configuration = {
   devtool: DEBUG ? 'cheap-module-eval-source-map' : undefined,
   entry: {
     main: './src/index.tsx',
-    config: './src/js/config',
+    config: './src/js/config/index.tsx',
   },
   resolve: {
     extensions: ['.ts', '.tsx', '.js', '.json'],
@@ -19,6 +20,7 @@ const config: Configuration = {
     },
   },
   plugins: [
+    new BundleAnalyzerPlugin(),
     {
       // code will be packaged and uploaded automatically only watch mode
       apply: (compiler) => {
@@ -50,7 +52,7 @@ const config: Configuration = {
   },
   output: {
     path: path.resolve(__dirname, 'src/dist'),
-    filename: DEBUG ? '[name].bundle.js' : '[name].[chunkhash:8].js',
+    filename: '[name].bundle.js',
     publicPath: '/',
   },
   module: {
