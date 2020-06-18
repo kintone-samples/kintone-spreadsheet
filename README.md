@@ -1,7 +1,7 @@
 # kintone スプレッドシート
 
-[English Readme](https://github.com/mura-/kintone-spreadsheet/README-en.md)
-[中文 Readme](https://github.com/mura-/kintone-spreadsheet/README-zh.md)
+[English Readme](https://github.com/mura-/kintone-spreadsheet/blob/master/README-en.md)  
+[中文 Readme](https://github.com/mura-/kintone-spreadsheet/blob/master/README-zh.md)
 
 ## Description
 
