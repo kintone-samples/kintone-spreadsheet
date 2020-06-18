@@ -14,7 +14,7 @@ You can view and edit the kintone list screen with the look of a spreadsheet lik
 
 - You can set any field in the kintone app.
 - The configured fields are displayed on the sparedsheet and you can edit, add, or delete records.
-- Supports dropdown fields and radio button fields.
+- Supports dropdown fields and radio button fields.  
   ![image](https://raw.githubusercontent.com/mura-/kintone-spreadsheet-no-longer-maintained/master/dropdown.gif)
 - Supports user fields and checkboxes (display only)
 - Supports kintone search function, pagination, and sorting
