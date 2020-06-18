@@ -27,13 +27,13 @@ kintone の一覧画面を Excel のようなスプレッドシートの見た�
 - 同期処理のため 10 秒に 1 回リフレッシュされます。
   API の使用制限にかかる恐れもあるので長時間の開きっぱなしはオススメしません。
 
-## Usage
+## Installation
 
 1. プラグインを[Download する](https://github.com/mura-/kintone-spreadsheet/releases/)
 1. プラグインを[インポートする](https://help.cybozu.com/ja/k/admin/plugin.html)
 1. プラグインの設定をする
 
-## Installation
+## How to edit this plugin
 
 プラグイン自体の拡張や変更などをしたい場合は、以下の手順で行ってください。
 
