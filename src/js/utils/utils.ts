@@ -40,8 +40,10 @@ const excludeNonEditableFields = (record) => {
 };
 
 export const getColumnData = async (config: Config) => {
+  const query = kintone.app.getQuery();
   const resp = await kintone.api('/k/v1/app/form/fields', 'GET', {
     app: kintone.app.getId(),
+    query,
   });
   // ヘッダーの取得
   const colHeaders = config.columns.map(({ code }) => {
@@ -113,8 +115,10 @@ export const fetchConfig = async (PLUGIN_ID: string): Promise<Config | null> => 
 
 export const fetchAppData = async (config: Config) => {
   // TODO: kintone rest api client使う
+  const query = kintone.app.getQuery();
   const { records } = await kintone.api(kintone.api.url('/k/v1/records', true), 'GET', {
     app: kintone.app.getId(),
+    query,
   });
 
   const columnData = await getColumnData(config);
@@ -161,8 +165,10 @@ export async function saveAfterChange(changes: Handsontable.CellChange[] | null,
 
   // TODO: kintone rest api client使う
   await client.bulkRequest({ requests });
+  const query = kintone.app.getQuery();
   const { records } = await kintone.api(kintone.api.url('/k/v1/records', true), 'GET', {
     app: kintone.app.getId(),
+    query,
   });
   hot.loadData(records);
 }
@@ -173,8 +179,10 @@ export async function beforeRemoveRow(index: number, amount: number) {
   const ids = sourceData.slice(index, index + amount).map((record) => record.$id.value);
   // TODO: kintone rest api client使う
   await kintone.api('/k/v1/records', 'DELETE', { app: kintone.app.getId(), ids });
+  const query = kintone.app.getQuery();
   const { records } = await kintone.api(kintone.api.url('/k/v1/records', true), 'GET', {
     app: kintone.app.getId(),
+    query,
   });
   hot.loadData(records);
 }
