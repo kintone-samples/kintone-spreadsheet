@@ -6,15 +6,15 @@
   "config": {
     "section1": {
       "header": "1. Create a customize view",
-      "body": "カスタマイズビューを作成し、下記例のようにスプレットシートのための要素を用意してください。",
-      "link_text": "kintone ユーザーヘルプ: 一覧を設定する",
-      "example": "例）"
+      "body": "Create a customized view and prepare the element for the spreadsheeet as in the example below",
+      "link_text": "kintone Help: Configuring Views",
+      "example": "example)"
     },
     "section2": {
-      "header": "2. 1で設定した要素IDを入力してください。"
+      "header": "2. Enter the target element id set in 1"
     },
     "section3": {
-      "header": "3. スプレットシートに表示したいフィールドを設定してください。"
+      "header": "3. Select the fields you want to display in the spreadsheet"
     }
   }
 }
