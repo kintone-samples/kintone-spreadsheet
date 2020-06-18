@@ -15,6 +15,7 @@
     },
     "section3": {
       "header": "3. Select the fields you want to display in the spreadsheet"
-    }
+    },
+    "success": "Save successful"
   }
 }

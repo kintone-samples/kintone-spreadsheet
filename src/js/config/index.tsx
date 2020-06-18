@@ -111,7 +111,7 @@ const Config: React.FC<Props> = ({ pluginId }) => {
         <Button type="submit" text={t('common.save')} onClick={onSubmit} />{' '}
         <Button onClick={onCancel} text={t('common.cancel')} />
       </div>
-      <Alert text="設定を保存しました" type="success" isVisible={showAlert} onClick={onClickAlert} />
+      <Alert text={t('config.success')} type="success" isVisible={showAlert} onClick={onClickAlert} />
     </div>
   );
 };
