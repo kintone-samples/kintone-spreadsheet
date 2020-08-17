@@ -25,7 +25,8 @@
     "i18next": "^19.4.5",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
-    "react-i18next": "^11.6.0"
+    "react-i18next": "^11.6.0",
+    "react-use": "^15.3.3"
   },
   "devDependencies": {
     "@babel/core": "^7.10.2",
