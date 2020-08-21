@@ -15,14 +15,16 @@ const Container: React.FC<ContainerProps> = ({ config }) => {
   const autoload = () => {
     setTimeout(async () => {
       const { records } = await fetchAppData(config);
-      spreadSheetProps.ref.current?.hotInstance.loadData(records);
+      spreadSheetProps.hotRef.current?.hotInstance.loadData(records);
       autoload();
     }, 10000); // 10秒。APIの呼び出し数の上限があるので、必要に応じて変更してください。
   };
 
   autoload();
 
-  return <SpreadSheet {...spreadSheetProps} />;
+  console.log('props:', spreadSheetProps);
+
+  return <SpreadSheet {...spreadSheetProps} hotRef={spreadSheetProps.hotRef} />;
 };
 
 ((PLUGIN_ID) => {

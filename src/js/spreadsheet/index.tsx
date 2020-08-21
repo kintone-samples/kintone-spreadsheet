@@ -13,7 +13,7 @@ type Props = {
   columns: Handsontable.GridSettings['columns'];
   dataSchema: Handsontable.GridSettings['dataSchema'];
   data: Handsontable.GridSettings['data'];
-  ref: React.RefObject<HotTable>;
+  hotRef: React.RefObject<HotTable>;
 };
 
 const ARRAY_FIELDS = [
@@ -208,12 +208,12 @@ export const useSpreadSheet = ({ config }: { config: Config }): Props => {
     columns: fetchedAppDataState.value?.columnData.columnDatas ?? [],
     data: fetchedAppDataState.value?.records ?? [],
     dataSchema: fetchedAppDataState.value?.columnData.dataSchema ?? {},
-    ref: hotRef as React.MutableRefObject<HotTable>,
+    hotRef: hotRef as React.MutableRefObject<HotTable>,
   };
 };
 
 export const SpreadSheet: React.FC<Props> = ({
-  ref,
+  hotRef,
   beforeRemoveRow,
   saveAfterChange,
   colHeaders,
@@ -223,7 +223,7 @@ export const SpreadSheet: React.FC<Props> = ({
 }) => {
   return (
     <HotTable
-      ref={ref}
+      ref={hotRef}
       data={data}
       rowHeaders
       contextMenu={['remove_row']}
