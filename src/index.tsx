@@ -11,20 +11,7 @@ type ContainerProps = {
 
 const Container: React.FC<ContainerProps> = ({ config }) => {
   const spreadSheetProps = useSpreadSheet({ config });
-
-  const autoload = () => {
-    setTimeout(async () => {
-      const { records } = await fetchAppData(config);
-      spreadSheetProps.hotRef.current?.hotInstance.loadData(records);
-      autoload();
-    }, 10000); // 10秒。APIの呼び出し数の上限があるので、必要に応じて変更してください。
-  };
-
-  autoload();
-
-  console.log('props:', spreadSheetProps);
-
-  return <SpreadSheet {...spreadSheetProps} hotRef={spreadSheetProps.hotRef} />;
+  return <SpreadSheet {...spreadSheetProps} />;
 };
 
 ((PLUGIN_ID) => {
