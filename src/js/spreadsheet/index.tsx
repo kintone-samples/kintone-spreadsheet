@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import Handsontable from 'handsontable';
 import { HotTable } from '@handsontable/react';
 import 'handsontable/dist/handsontable.full.css';
@@ -43,6 +43,39 @@ const NOT_ALLOWED_EDIT_FIELDS = [
   'ORGANIZATION_SELECT',
   'GROUP_SELECT',
 ];
+
+function useRecursiveTimeout<T>(callback: () => Promise<T> | (() => void), delay: number | null) {
+  const savedCallback = useRef(callback);
+
+  // Remember the latest callback.
+  useEffect(() => {
+    savedCallback.current = callback;
+  }, [callback]);
+
+  // Set up the timeout loop.
+  useEffect(() => {
+    let id: NodeJS.Timeout;
+    function tick() {
+      const ret = savedCallback.current();
+
+      if (ret instanceof Promise) {
+        ret.then(() => {
+          if (delay !== null) {
+            id = setTimeout(tick, delay);
+          }
+        });
+      } else {
+        if (delay !== null) {
+          id = setTimeout(tick, delay);
+        }
+      }
+    }
+    if (delay !== null) {
+      id = setTimeout(tick, delay);
+      return () => id && clearTimeout(id);
+    }
+  }, [delay]);
+}
 
 const excludeNonEditableFields = (record) => {
   const result = {};
@@ -115,76 +148,81 @@ const checkboxRenderer: Handsontable.renderers.Checkbox = (instance, td, row, co
 export const useSpreadSheet = ({ config }: { config: Config }): Props => {
   const hotRef = useRef<HotTable>();
   const fetchedAppDataState = useAsync(async (): Promise<{
-    records: any[];
     columnData: {
       colHeaders: any[];
       columnDatas: Handsontable.ColumnSettings[];
       dataSchema: Handsontable.RowObject;
     };
   }> => {
-    // TODO: kintone rest api client使う
-    const query = kintone.app.getQuery();
-    const { records } = await kintone.api(kintone.api.url('/k/v1/records', true), 'GET', {
-      app: kintone.app.getId(),
-      query,
-    });
-
     const columnData = await getColumnData(config);
-
-    return { records, columnData };
+    return { columnData };
   }, [config]);
 
-  const handleSaveAfterChange = async (
-    changes: Handsontable.CellChange[] | null,
-    source: Handsontable.ChangeSource,
-  ) => {
+  const fetchAndLoadData = useCallback(async (): Promise<void> => {
+    // TODO: kintone rest api client使う
     const hot = hotRef.current?.hotInstance ?? undefined;
     if (!hot) return;
-
-    const sourceData = hot.getSourceData();
-
-    // データ読み込み時はイベントを終了
-    if (source === 'loadData' || !changes) return;
-
-    const changedRows = changes.map((row) => row[0]).filter((x, i, arr) => arr.indexOf(x) === i);
-
-    // FIXME: ここらへんはSourceData起点がいいかもしれない
-    const insertRecords = changedRows
-      .filter((row) => !sourceData[row]?.$id?.value)
-      .map((row) => excludeNonEditableFields(sourceData[row]));
-
-    const updateRecords = changedRows
-      .filter((row) => sourceData[row]?.$id?.value)
-      .map((row) => ({ id: sourceData[row].$id.value, record: excludeNonEditableFields(sourceData[row]) }));
-
-    const requests = [
-      {
-        method: 'PUT',
-        api: '/k/v1/records.json',
-        payload: {
-          app: kintone.app.getId(),
-          records: updateRecords,
-        },
-      },
-      {
-        method: 'POST',
-        api: '/k/v1/records.json',
-        payload: {
-          app: kintone.app.getId(),
-          records: insertRecords,
-        },
-      },
-    ];
-
-    // TODO: kintone rest api client使う
-    await client.bulkRequest({ requests });
     const query = kintone.app.getQuery();
     const { records } = await kintone.api(kintone.api.url('/k/v1/records', true), 'GET', {
       app: kintone.app.getId(),
       query,
     });
     hot.loadData(records);
-  };
+  }, [hotRef]);
+
+  useEffect(() => {
+    fetchAndLoadData();
+  }, []);
+  useRecursiveTimeout(async () => {
+    await fetchAndLoadData();
+  }, 10000); // 10秒ごとにリロード
+
+  const handleSaveAfterChange = useCallback(
+    async (changes: Handsontable.CellChange[] | null, source: Handsontable.ChangeSource) => {
+      const hot = hotRef.current?.hotInstance ?? undefined;
+      if (!hot) return;
+
+      const sourceData = hot.getSourceData();
+
+      // データ読み込み時はイベントを終了
+      if (source === 'loadData' || !changes) return;
+
+      const changedRows = changes.map((row) => row[0]).filter((x, i, arr) => arr.indexOf(x) === i);
+
+      // FIXME: ここらへんはSourceData起点がいいかもしれない
+      const insertRecords = changedRows
+        .filter((row) => !sourceData[row]?.$id?.value)
+        .map((row) => excludeNonEditableFields(sourceData[row]));
+
+      const updateRecords = changedRows
+        .filter((row) => sourceData[row]?.$id?.value)
+        .map((row) => ({ id: sourceData[row].$id.value, record: excludeNonEditableFields(sourceData[row]) }));
+
+      const requests = [
+        {
+          method: 'PUT',
+          api: '/k/v1/records.json',
+          payload: {
+            app: kintone.app.getId(),
+            records: updateRecords,
+          },
+        },
+        {
+          method: 'POST',
+          api: '/k/v1/records.json',
+          payload: {
+            app: kintone.app.getId(),
+            records: insertRecords,
+          },
+        },
+      ];
+
+      // TODO: kintone rest api client使う
+      await client.bulkRequest({ requests });
+      fetchAndLoadData();
+    },
+    [client, hotRef],
+  );
 
   const handleBeforeRemoveRow = async (index: number, amount: number) => {
     const hot = hotRef.current?.hotInstance ?? undefined;
@@ -193,12 +231,7 @@ export const useSpreadSheet = ({ config }: { config: Config }): Props => {
     const ids = sourceData.slice(index, index + amount).map((record) => record.$id.value);
     // TODO: kintone rest api client使う
     await kintone.api('/k/v1/records', 'DELETE', { app: kintone.app.getId(), ids });
-    const query = kintone.app.getQuery();
-    const { records } = await kintone.api(kintone.api.url('/k/v1/records', true), 'GET', {
-      app: kintone.app.getId(),
-      query,
-    });
-    hot.loadData(records);
+    fetchAndLoadData();
   };
 
   return {
@@ -206,7 +239,7 @@ export const useSpreadSheet = ({ config }: { config: Config }): Props => {
     saveAfterChange: handleSaveAfterChange,
     colHeaders: fetchedAppDataState.value?.columnData.colHeaders ?? [],
     columns: fetchedAppDataState.value?.columnData.columnDatas ?? [],
-    data: fetchedAppDataState.value?.records ?? [],
+    data: [],
     dataSchema: fetchedAppDataState.value?.columnData.dataSchema ?? {},
     hotRef: hotRef as React.MutableRefObject<HotTable>,
   };
