@@ -1,9 +1,18 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { HotTable } from '@handsontable/react';
 import 'handsontable/dist/handsontable.full.css';
-import { fetchAppData, fetchConfig, saveAfterChange, beforeRemoveRow } from './js/utils/utils';
-import { isValidConfig } from '~/src/js/config';
+import { fetchConfig } from './js/utils/utils';
+import { isValidConfig, Config } from '~/src/js/config';
+import { SpreadSheet, useSpreadSheet } from '~/src/js/spreadsheet';
+
+type ContainerProps = {
+  config: Config;
+};
+
+const Container: React.FC<ContainerProps> = ({ config }) => {
+  const spreadSheetProps = useSpreadSheet({ config });
+  return <SpreadSheet {...spreadSheetProps} />;
+};
 
 ((PLUGIN_ID) => {
   kintone.events.on('app.record.index.show', (event) => {
@@ -16,36 +25,7 @@ import { isValidConfig } from '~/src/js/config';
       const containerElement = document.getElementById(config.elementId);
       if (!containerElement) return event;
 
-      const { columnData, records } = await fetchAppData(config);
-      const hot = React.createRef<HotTable>();
-
-      const autoload = () => {
-        setTimeout(async () => {
-          const { columnData, records } = await fetchAppData(config);
-          hot.current?.hotInstance.loadData(records);
-          autoload();
-        }, 10000); // 10秒。APIの呼び出し数の上限があるので、必要に応じて変更してください。
-      };
-
-      autoload();
-
-      ReactDOM.render(
-        <HotTable
-          ref={hot}
-          data={records}
-          rowHeaders
-          contextMenu={['remove_row']}
-          minSpareRows={1}
-          width="100%"
-          height="100vh"
-          colHeaders={columnData.colHeaders}
-          columns={columnData.columnDatas}
-          dataSchema={columnData.dataSchema}
-          afterChange={saveAfterChange}
-          beforeRemoveRow={beforeRemoveRow}
-        />,
-        document.getElementById(config.elementId),
-      );
+      ReactDOM.render(<Container config={config} />, document.getElementById(config.elementId));
     })();
 
     return event;
