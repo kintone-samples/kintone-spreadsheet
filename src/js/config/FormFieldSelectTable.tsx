@@ -1,4 +1,4 @@
-import React, { useState, useCallback, ChangeEvent, useEffect, SyntheticEvent } from 'react';
+import React, { useState, useCallback, useEffect, SyntheticEvent } from 'react';
 
 export interface FormField {
   code: string;

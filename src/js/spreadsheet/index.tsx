@@ -131,14 +131,14 @@ const getColumnData = async (config: Config) => {
   return { colHeaders, columnDatas, dataSchema };
 };
 
-const userSelectRenderer: Handsontable.renderers.Base = (instance, td, row, col, prop, value, cellProperties) => {
+const userSelectRenderer: Handsontable.renderers.Base = (instance, td, row, col, prop, value) => {
   if (!value) return td;
   td.innerText = value.map((v) => v.name).join(', ');
   td.style.color = '#777';
   return td;
 };
 
-const checkboxRenderer: Handsontable.renderers.Checkbox = (instance, td, row, col, prop, value, cellProperties) => {
+const checkboxRenderer: Handsontable.renderers.Checkbox = (instance, td, row, col, prop, value) => {
   if (!value.length) return td;
   td.innerText = value.join(', ');
   td.style.color = '#777';
@@ -172,7 +172,8 @@ export const useSpreadSheet = ({ config }: { config: Config }): Props => {
 
   useEffect(() => {
     fetchAndLoadData();
-  }, []);
+  }, [fetchAndLoadData]);
+
   useRecursiveTimeout(async () => {
     await fetchAndLoadData();
   }, 10000); // 10秒ごとにリロード
@@ -222,7 +223,7 @@ export const useSpreadSheet = ({ config }: { config: Config }): Props => {
       await client.bulkRequest({ requests });
       fetchAndLoadData();
     },
-    [client, hotRef],
+    [fetchAndLoadData],
   );
 
   const handleBeforeRemoveRow = async (index: number, amount: number) => {
