@@ -42,7 +42,7 @@ const useConfig = (pluginId: string) => {
         ...config,
         elementId: value || '',
       })),
-    [setConfig],
+    [],
   );
 
   // TODO: Loadingなど表示
