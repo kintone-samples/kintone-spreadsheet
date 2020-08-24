@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import 'handsontable/dist/handsontable.full.css';
-import { fetchAppData, fetchConfig } from './js/utils/utils';
+import { fetchConfig } from './js/utils/utils';
 import { isValidConfig, Config } from '~/src/js/config';
 import { SpreadSheet, useSpreadSheet } from '~/src/js/spreadsheet';
 
