@@ -20,7 +20,6 @@
   },
   "rules": {
     "@typescript-eslint/prefer-function-type": "off",
-    "@typescript-eslint/interface-name-prefix": ["error", "never"],
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/explicit-function-return-type": "off",
     "@typescript-eslint/no-use-before-define": "off",
@@ -35,7 +34,7 @@
     "curly": ["error", "multi-line"],
     "react/jsx-boolean-value": ["error", "never"],
     "react/prop-types": "off",
-    "max-len": ["error", { "code": 120, "ignorePattern": "^import |^export {(.*?)}" }],
+    "max-len": ["error", { "code": 120, "ignorePattern": "^import .*?|^export .*?" }],
     "no-console": ["error", { "allow": ["warn", "error"] }],
     "import/order": "error",
     "sort-keys": "off",
