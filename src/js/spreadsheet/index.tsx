@@ -44,7 +44,7 @@ const NOT_ALLOWED_EDIT_FIELDS = [
   'GROUP_SELECT',
 ];
 
-function useRecursiveTimeout<T>(callback: () => Promise<T> | (() => void), delay: number | null) {
+const useRecursiveTimeout = <T extends unknown>(callback: () => Promise<T> | (() => void), delay: number | null) => {
   const savedCallback = useRef(callback);
 
   // Remember the latest callback.
@@ -75,7 +75,7 @@ function useRecursiveTimeout<T>(callback: () => Promise<T> | (() => void), delay
       return () => id && clearTimeout(id);
     }
   }, [delay]);
-}
+};
 
 const excludeNonEditableFields = (record) => {
   const result = {};
@@ -176,6 +176,7 @@ export const useSpreadSheet = ({ config }: { config: Config }): Props => {
   useRecursiveTimeout(async () => {
     await fetchAndLoadData();
   }, 10000); // 10秒ごとにリロード
+  // FIXME: 設定画面から設定できるようにする
 
   const handleSaveAfterChange = useCallback(
     async (changes: Handsontable.CellChange[] | null, source: Handsontable.ChangeSource) => {
@@ -239,7 +240,7 @@ export const useSpreadSheet = ({ config }: { config: Config }): Props => {
     saveAfterChange: handleSaveAfterChange,
     colHeaders: fetchedAppDataState.value?.columnData.colHeaders ?? [],
     columns: fetchedAppDataState.value?.columnData.columnDatas ?? [],
-    data: [],
+    data: [], // 繰り返しデータは取得するので初期値としてのデータはあたえない
     dataSchema: fetchedAppDataState.value?.columnData.dataSchema ?? {},
     hotRef: hotRef as React.MutableRefObject<HotTable>,
   };
