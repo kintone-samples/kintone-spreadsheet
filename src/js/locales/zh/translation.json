@@ -16,6 +16,10 @@
     "section3": {
       "header": "3. 设置需要在电子表格中显示的字段。"
     },
+    "auto_reload": {
+      "header": "Auto reload interval (sec)",
+      "description": "Minimum is 10 seconds. The interval can be changed if you care about API consumption."
+    },
     "success": "已保存设置。"
   }
 }
