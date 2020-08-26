@@ -174,10 +174,12 @@ export const useSpreadSheet = ({ config }: { config: Config }): Props => {
     fetchAndLoadData();
   }, [fetchAndLoadData]);
 
-  useRecursiveTimeout(async () => {
-    await fetchAndLoadData();
-  }, 10000); // 10秒ごとにリロード
-  // FIXME: 設定画面から設定できるようにする
+  useRecursiveTimeout(
+    async () => {
+      await fetchAndLoadData();
+    },
+    config.autoReloadInterval ? Number(config.autoReloadInterval) * 100 : 10000,
+  ); // デフォルト10秒ごとにリロード
 
   const handleSaveAfterChange = useCallback(
     async (changes: Handsontable.CellChange[] | null, source: Handsontable.ChangeSource) => {
