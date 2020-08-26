@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { Button, Text, Alert } from '@kintone/kintone-ui-component';
+import { Button, Text, Alert, Label } from '@kintone/kintone-ui-component';
 import '~/src/css/51-us-default.scss';
 import './styles.scss';
 import FormFieldSelectTable, { OnChange as FormFieldSelectTableOnChange, FormField } from './FormFieldSelectTable';
@@ -10,6 +10,7 @@ import '~/src/js/utils/i18n';
 export interface Config {
   elementId: string;
   columns: FormField[];
+  autoReloadInterval: number; // ms
 }
 
 export const isValidConfig = (config: any): config is Config => {
@@ -19,20 +20,27 @@ export const isValidConfig = (config: any): config is Config => {
   return false;
 };
 
+export const emptyConfig: Config = {
+  elementId: 'sheet',
+  columns: [],
+  autoReloadInterval: 10, // sec
+};
+
 const useConfig = (pluginId: string) => {
   const { t, i18n } = useTranslation();
   useEffect(() => {
     i18n.changeLanguage(kintone.getLoginUser().language);
   }, [i18n]);
   const restoredConfig = kintone.plugin.app.getConfig(pluginId);
+
   const [config, setConfig] = useState<Config>(
     // restore from parsed configuration
-    restoredConfig.config && Object.keys(JSON.parse(restoredConfig.config)).length
-      ? JSON.parse(restoredConfig.config)
-      : {
-          elementId: 'sheet',
-          columns: [],
-        },
+    restoredConfig.config
+      ? {
+          ...emptyConfig,
+          ...JSON.parse(restoredConfig.config),
+        }
+      : emptyConfig,
   );
   const [showAlert, setShowAlert] = useState<boolean>(false);
 
@@ -45,17 +53,29 @@ const useConfig = (pluginId: string) => {
     [],
   );
 
+  const onChangeAutoRenewalInterval = useCallback((value: string | null) => {
+    setConfig((config) => ({
+      ...config,
+      autoReloadInterval: Number.isInteger(Number(value)) ? Number(value) : 0,
+    }));
+  }, []);
+
   // TODO: Loadingなど表示
   const onSubmit = useCallback(() => {
     setShowAlert(false);
+    const validConfig: Config = {
+      ...config,
+      autoReloadInterval:
+        config.autoReloadInterval > emptyConfig.autoReloadInterval
+          ? config.autoReloadInterval
+          : emptyConfig.autoReloadInterval,
+    };
     kintone.plugin.app.setConfig(
       {
-        config: JSON.stringify({
-          elementId: config.elementId,
-          columns: config.columns,
-        }),
+        config: JSON.stringify(validConfig),
       },
       () => {
+        setConfig(validConfig);
         setShowAlert(true);
       },
     );
@@ -73,6 +93,7 @@ const useConfig = (pluginId: string) => {
   return {
     config,
     onChangeElementId,
+    onChangeAutoRenewalInterval,
     onChange,
     onSubmit,
     onCancel,
@@ -87,7 +108,17 @@ interface Props {
 }
 
 const Config: React.FC<Props> = ({ pluginId }) => {
-  const { config, onChangeElementId, onChange, onSubmit, onCancel, showAlert, onClickAlert, t } = useConfig(pluginId);
+  const {
+    config,
+    onChangeElementId,
+    onChangeAutoRenewalInterval,
+    onChange,
+    onSubmit,
+    onCancel,
+    showAlert,
+    onClickAlert,
+    t,
+  } = useConfig(pluginId);
   return (
     <div id="form" className="colorcell-plugin">
       <div className="kintoneplugin-row">
@@ -106,6 +137,11 @@ const Config: React.FC<Props> = ({ pluginId }) => {
       <div className="kintoneplugin-row">
         <h2 className="kintoneplugin-label">{t('config.section3.header')}</h2>
         <FormFieldSelectTable onChange={onChange} defaultSelectedFields={config.columns} />
+      </div>
+      <div className="kintoneplugin-row">
+        <h2 className="kintoneplugin-label">オートリロード時間（秒）</h2>
+        <Label text="最短10秒。間隔を広げたいときに変更してください"></Label>
+        <Text value={config.autoReloadInterval.toString()} onChange={onChangeAutoRenewalInterval} />
       </div>
       <div className="kintoneplugin-row form-control">
         <Button type="submit" text={t('common.save')} onClick={onSubmit} />{' '}
