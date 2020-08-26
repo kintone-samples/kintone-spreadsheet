@@ -139,8 +139,8 @@ const Config: React.FC<Props> = ({ pluginId }) => {
         <FormFieldSelectTable onChange={onChange} defaultSelectedFields={config.columns} />
       </div>
       <div className="kintoneplugin-row">
-        <h2 className="kintoneplugin-label">オートリロード時間（秒）</h2>
-        <Label text="最短10秒。間隔を広げたいときに変更してください"></Label>
+        <h2 className="kintoneplugin-label">{t('config.auto_reload.header')}</h2>
+        <Label text={t('config.auto_reload.description')}></Label>
         <Text value={config.autoReloadInterval.toString()} onChange={onChangeAutoRenewalInterval} />
       </div>
       <div className="kintoneplugin-row form-control">
