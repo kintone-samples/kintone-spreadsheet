@@ -3,8 +3,10 @@ import Handsontable from 'handsontable';
 import { HotTable } from '@handsontable/react';
 import 'handsontable/dist/handsontable.full.css';
 import { useAsync } from 'react-use';
+import { Record } from '@kintone/rest-api-client/lib/client/types';
 import { Config } from '~/src/js/config';
 import { client } from '~/src/js/utils/client';
+import { useRecursiveTimeout } from '~/src/js/utils/utils';
 
 type Props = {
   saveAfterChange: Handsontable.Hooks.Events['afterChange'];
@@ -44,43 +46,10 @@ const NOT_ALLOWED_EDIT_FIELDS = [
   'GROUP_SELECT',
 ];
 
-const useRecursiveTimeout = <T extends unknown>(callback: () => Promise<T> | (() => void), delay: number | null) => {
-  const savedCallback = useRef(callback);
+const excludeNonEditableFields = (record: Record) =>
+  Object.fromEntries(Object.entries(record).filter(([, v]) => NOT_ALLOWED_EDIT_FIELDS.indexOf(v.type) === -1));
 
-  // Remember the latest callback.
-  useEffect(() => {
-    savedCallback.current = callback;
-  }, [callback]);
-
-  // Set up the timeout loop.
-  useEffect(() => {
-    let id: NodeJS.Timeout;
-    function tick() {
-      const ret = savedCallback.current();
-
-      if (ret instanceof Promise) {
-        ret.then(() => {
-          if (delay !== null) {
-            id = setTimeout(tick, delay);
-          }
-        });
-      } else {
-        if (delay !== null) {
-          id = setTimeout(tick, delay);
-        }
-      }
-    }
-    if (delay !== null) {
-      id = setTimeout(tick, delay);
-      return () => id && clearTimeout(id);
-    }
-  }, [delay]);
-};
-
-const excludeNonEditableFields = (record) =>
-  Object.fromEntries(Object.entries(record).filter(([k, v]) => NOT_ALLOWED_EDIT_FIELDS.indexOf(v.type) === -1));
-
-const shapingRecord = (record) =>
+const shapingRecord = (record: Record) =>
   Object.fromEntries(
     Object.entries(record).map(([k, v]) => [
       k,
