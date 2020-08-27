@@ -77,19 +77,16 @@ const useRecursiveTimeout = <T extends unknown>(callback: () => Promise<T> | (()
   }, [delay]);
 };
 
-const excludeNonEditableFields = (record) => {
-  const result = {};
-  for (const prop in record) {
-    if (NOT_ALLOWED_EDIT_FIELDS.indexOf(record[prop].type) === -1) {
-      if (record[prop].type === 'NUMBER') {
-        result[prop] = { ...record[prop], value: record[prop].value.replace(/[^0-9]/g, '') };
-      } else {
-        result[prop] = record[prop];
-      }
-    }
-  }
-  return result;
-};
+const excludeNonEditableFields = (record) =>
+  Object.fromEntries(Object.entries(record).filter(([k, v]) => NOT_ALLOWED_EDIT_FIELDS.indexOf(v.type) === -1));
+
+const shapingRecord = (record) =>
+  Object.fromEntries(
+    Object.entries(record).map(([k, v]) => [
+      k,
+      { ...v, value: v.type === 'NUMBER' ? v.value.replace(/[^0-9]/g, '') : v.value },
+    ]),
+  );
 
 const getColumnData = async (config: Config) => {
   const query = kintone.app.getQuery();
@@ -182,7 +179,7 @@ export const useSpreadSheet = ({ config }: { config: Config }): Props => {
     async () => {
       await fetchAndLoadData();
     },
-    config.autoReloadInterval ? Number(config.autoReloadInterval) * 100 : 10000,
+    config.autoReloadInterval ? Number(config.autoReloadInterval) * 1000 : 10000,
   ); // デフォルト10秒ごとにリロード
 
   const handleSaveAfterChange = useCallback(
@@ -200,13 +197,14 @@ export const useSpreadSheet = ({ config }: { config: Config }): Props => {
       // FIXME: ここらへんはSourceData起点がいいかもしれない
       const insertRecords = changedRows
         .filter((row) => !sourceData[row]?.$id?.value)
-        .map((row) => excludeNonEditableFields(sourceData[row]));
+        .map((row) => shapingRecord(excludeNonEditableFields(sourceData[row])));
 
       const updateRecords = changedRows
         .filter((row) => sourceData[row]?.$id?.value)
-        .map((row) => ({ id: sourceData[row].$id.value, record: excludeNonEditableFields(sourceData[row]) }));
-
-      console.log(updateRecords);
+        .map((row) => ({
+          id: sourceData[row].$id.value,
+          record: shapingRecord(excludeNonEditableFields(sourceData[row])),
+        }));
 
       const requests = [
         {
