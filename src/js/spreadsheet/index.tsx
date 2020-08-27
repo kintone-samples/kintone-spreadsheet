@@ -3,8 +3,10 @@ import Handsontable from 'handsontable';
 import { HotTable } from '@handsontable/react';
 import 'handsontable/dist/handsontable.full.css';
 import { useAsync } from 'react-use';
+import { Record } from '@kintone/rest-api-client/lib/client/types';
 import { Config } from '~/src/js/config';
 import { client } from '~/src/js/utils/client';
+import { useRecursiveTimeout } from '~/src/js/utils/utils';
 
 type Props = {
   saveAfterChange: Handsontable.Hooks.Events['afterChange'];
@@ -44,48 +46,16 @@ const NOT_ALLOWED_EDIT_FIELDS = [
   'GROUP_SELECT',
 ];
 
-const useRecursiveTimeout = <T extends unknown>(callback: () => Promise<T> | (() => void), delay: number | null) => {
-  const savedCallback = useRef(callback);
+const excludeNonEditableFields = (record: Record) =>
+  Object.fromEntries(Object.entries(record).filter(([, v]) => NOT_ALLOWED_EDIT_FIELDS.indexOf(v.type) === -1));
 
-  // Remember the latest callback.
-  useEffect(() => {
-    savedCallback.current = callback;
-  }, [callback]);
-
-  // Set up the timeout loop.
-  useEffect(() => {
-    let id: NodeJS.Timeout;
-    function tick() {
-      const ret = savedCallback.current();
-
-      if (ret instanceof Promise) {
-        ret.then(() => {
-          if (delay !== null) {
-            id = setTimeout(tick, delay);
-          }
-        });
-      } else {
-        if (delay !== null) {
-          id = setTimeout(tick, delay);
-        }
-      }
-    }
-    if (delay !== null) {
-      id = setTimeout(tick, delay);
-      return () => id && clearTimeout(id);
-    }
-  }, [delay]);
-};
-
-const excludeNonEditableFields = (record) => {
-  const result = {};
-  for (const prop in record) {
-    if (NOT_ALLOWED_EDIT_FIELDS.indexOf(record[prop].type) === -1) {
-      result[prop] = record[prop];
-    }
-  }
-  return result;
-};
+const shapingRecord = (record: Record) =>
+  Object.fromEntries(
+    Object.entries(record).map(([k, v]) => [
+      k,
+      { ...v, value: v.type === 'NUMBER' ? v.value.replace(/[^0-9]/g, '') : v.value },
+    ]),
+  );
 
 const getColumnData = async (config: Config) => {
   const query = kintone.app.getQuery();
@@ -178,7 +148,7 @@ export const useSpreadSheet = ({ config }: { config: Config }): Props => {
     async () => {
       await fetchAndLoadData();
     },
-    config.autoReloadInterval ? Number(config.autoReloadInterval) * 100 : 10000,
+    config.autoReloadInterval ? Number(config.autoReloadInterval) * 1000 : 10000,
   ); // デフォルト10秒ごとにリロード
 
   const handleSaveAfterChange = useCallback(
@@ -196,11 +166,14 @@ export const useSpreadSheet = ({ config }: { config: Config }): Props => {
       // FIXME: ここらへんはSourceData起点がいいかもしれない
       const insertRecords = changedRows
         .filter((row) => !sourceData[row]?.$id?.value)
-        .map((row) => excludeNonEditableFields(sourceData[row]));
+        .map((row) => shapingRecord(excludeNonEditableFields(sourceData[row])));
 
       const updateRecords = changedRows
         .filter((row) => sourceData[row]?.$id?.value)
-        .map((row) => ({ id: sourceData[row].$id.value, record: excludeNonEditableFields(sourceData[row]) }));
+        .map((row) => ({
+          id: sourceData[row].$id.value,
+          record: shapingRecord(excludeNonEditableFields(sourceData[row])),
+        }));
 
       const requests = [
         {
