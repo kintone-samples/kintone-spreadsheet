@@ -81,7 +81,11 @@ const excludeNonEditableFields = (record) => {
   const result = {};
   for (const prop in record) {
     if (NOT_ALLOWED_EDIT_FIELDS.indexOf(record[prop].type) === -1) {
-      result[prop] = record[prop];
+      if (record[prop].type === 'NUMBER') {
+        result[prop] = { ...record[prop], value: record[prop].value.replace(/[^0-9]/g, '') };
+      } else {
+        result[prop] = record[prop];
+      }
     }
   }
   return result;
@@ -201,6 +205,8 @@ export const useSpreadSheet = ({ config }: { config: Config }): Props => {
       const updateRecords = changedRows
         .filter((row) => sourceData[row]?.$id?.value)
         .map((row) => ({ id: sourceData[row].$id.value, record: excludeNonEditableFields(sourceData[row]) }));
+
+      console.log(updateRecords);
 
       const requests = [
         {
