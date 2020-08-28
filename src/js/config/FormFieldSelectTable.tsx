@@ -73,6 +73,7 @@ const useFormFieldSelectTable = (
 
   useEffect(() => {
     (async () => {
+      // FIXME: Use form field api or form layout api
       const { properties } = (await kintone.api(kintone.api.url('/k/v1/preview/form', true), 'GET', {
         app: kintone.app.getId(),
       })) as FormApiResponse;

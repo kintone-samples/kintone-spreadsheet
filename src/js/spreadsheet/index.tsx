@@ -58,11 +58,7 @@ const shapingRecord = (record: Record) =>
   );
 
 const getColumnData = async (config: Config) => {
-  const query = kintone.app.getQuery();
-  const resp = await kintone.api('/k/v1/app/form/fields', 'GET', {
-    app: kintone.app.getId(),
-    query,
-  });
+  const resp = await client.app.getFormFields({ app: kintone.app.getId() || '' });
   // ヘッダーの取得
   const colHeaders = config.columns.map(({ code }) => {
     return resp.properties[code].label;
@@ -75,6 +71,7 @@ const getColumnData = async (config: Config) => {
     // if type is DROP_DOWN, add type and source property
     if (resp.properties[code].type === 'DROP_DOWN' || resp.properties[code].type === 'RADIO_BUTTON') {
       columnData.type = 'dropdown';
+      // columnData.source = Object.keys(resp.properties[code].options);
       columnData.source = Object.keys(resp.properties[code].options);
     }
 
@@ -95,6 +92,7 @@ const getColumnData = async (config: Config) => {
 
   // データスキーマの作成
   const dataSchema: Handsontable.RowObject = config.columns.reduce((prev, { code }) => {
+    // return { ...prev, [code]: { type: resp.properties[code].type, value: resp.properties[code].defaultValue } };
     return { ...prev, [code]: { type: resp.properties[code].type, value: resp.properties[code].defaultValue } };
   }, {});
 
@@ -132,11 +130,8 @@ export const useSpreadSheet = ({ config }: { config: Config }): Props => {
     // TODO: kintone rest api client使う
     const hot = hotRef.current?.hotInstance ?? undefined;
     if (!hot) return;
-    const query = kintone.app.getQuery();
-    const { records } = await kintone.api(kintone.api.url('/k/v1/records', true), 'GET', {
-      app: kintone.app.getId(),
-      query,
-    });
+    const query = kintone.app.getQuery() || '';
+    const { records } = await client.record.getRecords({ app: kintone.app.getId() || '', query });
     hot.loadData(records);
   }, [hotRef]);
 
@@ -194,7 +189,6 @@ export const useSpreadSheet = ({ config }: { config: Config }): Props => {
         },
       ];
 
-      // TODO: kintone rest api client使う
       await client.bulkRequest({ requests });
       fetchAndLoadData();
     },
@@ -206,8 +200,7 @@ export const useSpreadSheet = ({ config }: { config: Config }): Props => {
     if (!hot) return;
     const sourceData = hot.getSourceData();
     const ids = sourceData.slice(index, index + amount).map((record) => record.$id.value);
-    // TODO: kintone rest api client使う
-    await kintone.api('/k/v1/records', 'DELETE', { app: kintone.app.getId(), ids });
+    await client.record.deleteRecords({ app: kintone.app.getId() || '', ids });
     fetchAndLoadData();
   };
 
