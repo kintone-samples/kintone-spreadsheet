@@ -4,6 +4,7 @@ import { HotTable } from '@handsontable/react';
 import 'handsontable/dist/handsontable.full.css';
 import { useAsync } from 'react-use';
 import { Record } from '@kintone/rest-api-client/lib/client/types';
+import '@kintone/rest-api-client/lib/client/types/app/properties';
 import { Config } from '~/src/js/config';
 import { client } from '~/src/js/utils/client';
 import { useRecursiveTimeout } from '~/src/js/utils/utils';
@@ -71,8 +72,15 @@ const getColumnData = async (config: Config) => {
     // if type is DROP_DOWN, add type and source property
     if (resp.properties[code].type === 'DROP_DOWN' || resp.properties[code].type === 'RADIO_BUTTON') {
       columnData.type = 'dropdown';
-      // columnData.source = Object.keys(resp.properties[code].options);
-      columnData.source = Object.keys(resp.properties[code].options);
+      // FIXME: Type error.
+      columnData.source = Object.keys((resp.properties[code] as any).options);
+    }
+
+    // if type is DROP_DOWN, add type and source property
+    if (resp.properties[code].type === 'DROP_DOWN') {
+      columnData.type = 'dropdown';
+      // FIXME: Type error.
+      columnData.source = Object.keys((resp.properties[code] as any).options);
     }
 
     if (resp.properties[code].type === 'USER_SELECT') {
@@ -92,8 +100,10 @@ const getColumnData = async (config: Config) => {
 
   // データスキーマの作成
   const dataSchema: Handsontable.RowObject = config.columns.reduce((prev, { code }) => {
-    // return { ...prev, [code]: { type: resp.properties[code].type, value: resp.properties[code].defaultValue } };
-    return { ...prev, [code]: { type: resp.properties[code].type, value: resp.properties[code].defaultValue } };
+    return {
+      ...prev,
+      [code]: { type: resp.properties[code].type, value: (resp.properties[code] as any).defaultValue },
+    };
   }, {});
 
   return { colHeaders, columnDatas, dataSchema };
