@@ -123,7 +123,7 @@ const checkboxRenderer: Handsontable.renderers.Checkbox = (instance, td, row, co
   return td;
 };
 
-export const useSpreadSheet = ({ config }: { config: Config }): Props => {
+export const useSpreadSheet = ({ config, query }: { config: Config; query: string }): Props => {
   const hotRef = useRef<HotTable>();
   const fetchedAppDataState = useAsync(async (): Promise<{
     columnData: {
@@ -137,17 +137,15 @@ export const useSpreadSheet = ({ config }: { config: Config }): Props => {
   }, [config]);
 
   const fetchAndLoadData = useCallback(async (): Promise<void> => {
-    // TODO: kintone rest api client使う
     const hot = hotRef.current?.hotInstance ?? undefined;
     if (!hot) return;
-    const query = kintone.app.getQuery() || '';
     const { records } = await client.record.getRecords({ app: kintone.app.getId() || '', query });
     hot.loadData(records);
-  }, [hotRef]);
+  }, [hotRef, query]);
 
   useEffect(() => {
     fetchAndLoadData();
-  }, [fetchAndLoadData]);
+  }, [fetchAndLoadData, query]);
 
   useRecursiveTimeout(
     async () => {

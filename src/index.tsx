@@ -7,10 +7,11 @@ import { SpreadSheet, useSpreadSheet } from '~/src/js/spreadsheet';
 
 type ContainerProps = {
   config: Config;
+  query: string;
 };
 
-const Container: React.FC<ContainerProps> = ({ config }) => {
-  const spreadSheetProps = useSpreadSheet({ config });
+const Container: React.FC<ContainerProps> = ({ config, query }) => {
+  const spreadSheetProps = useSpreadSheet({ config, query });
   return <SpreadSheet {...spreadSheetProps} />;
 };
 
@@ -25,7 +26,10 @@ const Container: React.FC<ContainerProps> = ({ config }) => {
       const containerElement = document.getElementById(config.elementId);
       if (!containerElement) return event;
 
-      ReactDOM.render(<Container config={config} />, document.getElementById(config.elementId));
+      ReactDOM.render(
+        <Container config={config} query={kintone.app.getQuery() || ''} />,
+        document.getElementById(config.elementId),
+      );
     })();
 
     return event;
