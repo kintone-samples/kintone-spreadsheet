@@ -8,10 +8,11 @@ import { SpreadSheet, useSpreadSheet } from '~/src/js/spreadsheet';
 type ContainerProps = {
   config: Config;
   query: string;
+  appId: number;
 };
 
-const Container: React.FC<ContainerProps> = ({ config, query }) => {
-  const spreadSheetProps = useSpreadSheet({ config, query });
+const Container: React.FC<ContainerProps> = ({ config, query, appId }) => {
+  const spreadSheetProps = useSpreadSheet({ config, query, appId });
   return <SpreadSheet {...spreadSheetProps} />;
 };
 
@@ -27,7 +28,7 @@ const Container: React.FC<ContainerProps> = ({ config, query }) => {
       if (!containerElement) return event;
 
       ReactDOM.render(
-        <Container config={config} query={kintone.app.getQuery() || ''} />,
+        <Container config={config} query={kintone.app.getQuery() || ''} appId={kintone.app.getId() || 0} />,
         document.getElementById(config.elementId),
       );
     })();
