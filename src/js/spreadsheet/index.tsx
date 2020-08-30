@@ -58,8 +58,8 @@ const shapingRecord = (record: Record) =>
     ]),
   );
 
-const getColumnData = async (config: Config) => {
-  const resp = await client.app.getFormFields({ app: kintone.app.getId() || '' });
+const getColumnData = async (config: Config, appId: number) => {
+  const resp = await client.app.getFormFields({ app: appId });
   // ヘッダーの取得
   const colHeaders = config.columns.map(({ code }) => {
     return resp.properties[code].label;
@@ -123,7 +123,7 @@ const checkboxRenderer: Handsontable.renderers.Checkbox = (instance, td, row, co
   return td;
 };
 
-export const useSpreadSheet = ({ config, query }: { config: Config; query: string }): Props => {
+export const useSpreadSheet = ({ config, query, appId }: { config: Config; query: string; appId: number }): Props => {
   const hotRef = useRef<HotTable>();
   const fetchedAppDataState = useAsync(async (): Promise<{
     columnData: {
@@ -132,16 +132,16 @@ export const useSpreadSheet = ({ config, query }: { config: Config; query: strin
       dataSchema: Handsontable.RowObject;
     };
   }> => {
-    const columnData = await getColumnData(config);
+    const columnData = await getColumnData(config, appId);
     return { columnData };
   }, [config]);
 
   const fetchAndLoadData = useCallback(async (): Promise<void> => {
     const hot = hotRef.current?.hotInstance ?? undefined;
     if (!hot) return;
-    const { records } = await client.record.getRecords({ app: kintone.app.getId() || '', query });
+    const { records } = await client.record.getRecords({ app: appId, query });
     hot.loadData(records);
-  }, [hotRef, query]);
+  }, [appId, query]);
 
   useEffect(() => {
     fetchAndLoadData();
@@ -183,7 +183,7 @@ export const useSpreadSheet = ({ config, query }: { config: Config; query: strin
           method: 'PUT',
           api: '/k/v1/records.json',
           payload: {
-            app: kintone.app.getId(),
+            app: appId,
             records: updateRecords,
           },
         },
@@ -191,7 +191,7 @@ export const useSpreadSheet = ({ config, query }: { config: Config; query: strin
           method: 'POST',
           api: '/k/v1/records.json',
           payload: {
-            app: kintone.app.getId(),
+            app: appId,
             records: insertRecords,
           },
         },
@@ -200,7 +200,7 @@ export const useSpreadSheet = ({ config, query }: { config: Config; query: strin
       await client.bulkRequest({ requests });
       fetchAndLoadData();
     },
-    [fetchAndLoadData],
+    [appId, fetchAndLoadData],
   );
 
   const handleBeforeRemoveRow = async (index: number, amount: number) => {
@@ -208,7 +208,7 @@ export const useSpreadSheet = ({ config, query }: { config: Config; query: strin
     if (!hot) return;
     const sourceData = hot.getSourceData();
     const ids = sourceData.slice(index, index + amount).map((record) => record.$id.value);
-    await client.record.deleteRecords({ app: kintone.app.getId() || '', ids });
+    await client.record.deleteRecords({ app: appId, ids });
     fetchAndLoadData();
   };
 
