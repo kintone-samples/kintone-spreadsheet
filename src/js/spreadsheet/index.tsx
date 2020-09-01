@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useCallback, useState } from 'react';
 import Handsontable from 'handsontable';
 import { HotTable } from '@handsontable/react';
 import 'handsontable/dist/handsontable.full.css';
-import { useAsync } from 'react-use';
+import { useAsync, useAsyncFn } from 'react-use';
 import { Record } from '@kintone/rest-api-client/lib/client/types';
 import '@kintone/rest-api-client/lib/client/types/app/properties';
 import { Config } from '~/src/js/config';
@@ -137,15 +137,11 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
     return { columnData };
   }, [config]);
 
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-
-  const fetchAndLoadData = useCallback(async (): Promise<void> => {
+  const [fetchedAndLoadDataState, fetchAndLoadData] = useAsyncFn(async (): Promise<void> => {
     const hot = hotRef.current?.hotInstance ?? undefined;
     if (!hot) return;
-    setIsLoading(true);
     const { records } = await client.record.getRecords({ app: appId, query });
     hot.loadData(records);
-    setIsLoading(false);
   }, [appId, query]);
 
   useEffect(() => {
@@ -225,7 +221,7 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
     data: [], // 繰り返しデータは取得するので初期値としてのデータはあたえない
     dataSchema: fetchedAppDataState.value?.columnData.dataSchema ?? {},
     hotRef: hotRef as React.MutableRefObject<HotTable>,
-    isLoading,
+    isLoading: fetchedAndLoadDataState.loading,
   };
 };
 
