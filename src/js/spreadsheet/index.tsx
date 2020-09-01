@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback, useState } from 'react';
 import Handsontable from 'handsontable';
 import { HotTable } from '@handsontable/react';
 import 'handsontable/dist/handsontable.full.css';
@@ -17,6 +17,7 @@ type Props = {
   dataSchema: Handsontable.GridSettings['dataSchema'];
   data: Handsontable.GridSettings['data'];
   hotRef: React.RefObject<HotTable>;
+  isLoading: boolean;
 };
 
 const ARRAY_FIELDS = [
@@ -136,11 +137,15 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
     return { columnData };
   }, [config]);
 
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
   const fetchAndLoadData = useCallback(async (): Promise<void> => {
     const hot = hotRef.current?.hotInstance ?? undefined;
     if (!hot) return;
+    setIsLoading(true);
     const { records } = await client.record.getRecords({ app: appId, query });
     hot.loadData(records);
+    setIsLoading(false);
   }, [appId, query]);
 
   useEffect(() => {
@@ -220,19 +225,12 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
     data: [], // 繰り返しデータは取得するので初期値としてのデータはあたえない
     dataSchema: fetchedAppDataState.value?.columnData.dataSchema ?? {},
     hotRef: hotRef as React.MutableRefObject<HotTable>,
+    isLoading,
   };
 };
 
-export const SpreadSheet: React.FC<Props> = ({
-  hotRef,
-  beforeRemoveRow,
-  saveAfterChange,
-  colHeaders,
-  columns,
-  dataSchema,
-  data,
-}) => {
-  return (
+const MemoedHotTable = React.memo<Omit<Props, 'isLoading'>>(
+  ({ hotRef, beforeRemoveRow, saveAfterChange, colHeaders, columns, dataSchema, data }) => (
     <HotTable
       ref={hotRef}
       data={data}
@@ -247,5 +245,34 @@ export const SpreadSheet: React.FC<Props> = ({
       afterChange={saveAfterChange}
       beforeRemoveRow={beforeRemoveRow}
     />
+  ),
+  (prev, next) => prev.hotRef === next.hotRef && prev.columns?.length === next.columns?.length,
+);
+
+MemoedHotTable.displayName = 'MemoedHotTable';
+
+export const SpreadSheet: React.FC<Props> = ({
+  hotRef,
+  beforeRemoveRow,
+  saveAfterChange,
+  colHeaders,
+  columns,
+  dataSchema,
+  data,
+  isLoading,
+}) => {
+  return (
+    <div>
+      <div>{isLoading && 'Loading...'}</div>
+      <MemoedHotTable
+        hotRef={hotRef}
+        data={data}
+        colHeaders={colHeaders}
+        columns={columns}
+        dataSchema={dataSchema}
+        saveAfterChange={saveAfterChange}
+        beforeRemoveRow={beforeRemoveRow}
+      />
+    </div>
   );
 };
