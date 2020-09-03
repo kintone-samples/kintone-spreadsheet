@@ -5,9 +5,11 @@ import 'handsontable/dist/handsontable.full.css';
 import { useAsync, useAsyncFn } from 'react-use';
 import { Record } from '@kintone/rest-api-client/lib/client/types';
 import '@kintone/rest-api-client/lib/client/types/app/properties';
+import styled from '@emotion/styled';
 import { Config } from '~/src/js/config';
 import { client } from '~/src/js/utils/client';
 import { useRecursiveTimeout } from '~/src/js/utils/utils';
+import { Loader } from '~/src/js/spreadsheet/Loader';
 
 type Props = {
   saveAfterChange: Handsontable.Hooks.Events['afterChange'];
@@ -179,26 +181,26 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
           record: shapingRecord(excludeNonEditableFields(sourceData[row])),
         }));
 
-      const requests = [
-        {
-          method: 'PUT',
-          api: '/k/v1/records.json',
-          payload: {
-            app: appId,
-            records: updateRecords,
+      await client.bulkRequest({
+        requests: [
+          {
+            method: 'PUT',
+            api: '/k/v1/records.json',
+            payload: {
+              app: appId,
+              records: updateRecords,
+            },
           },
-        },
-        {
-          method: 'POST',
-          api: '/k/v1/records.json',
-          payload: {
-            app: appId,
-            records: insertRecords,
+          {
+            method: 'POST',
+            api: '/k/v1/records.json',
+            payload: {
+              app: appId,
+              records: insertRecords,
+            },
           },
-        },
-      ];
-
-      await client.bulkRequest({ requests });
+        ],
+      });
       fetchAndLoadData();
     },
     [appId, fetchAndLoadData],
@@ -247,6 +249,10 @@ const MemoedHotTable = React.memo<Omit<Props, 'isLoading'>>(
 
 MemoedHotTable.displayName = 'MemoedHotTable';
 
+const Wrapper = styled.div`
+  position: relative;
+`;
+
 export const SpreadSheet: React.FC<Props> = ({
   hotRef,
   beforeRemoveRow,
@@ -258,8 +264,8 @@ export const SpreadSheet: React.FC<Props> = ({
   isLoading,
 }) => {
   return (
-    <div>
-      <div>{isLoading && 'Loading...'}</div>
+    <Wrapper>
+      {isLoading && <Loader />}
       <MemoedHotTable
         hotRef={hotRef}
         data={data}
@@ -269,6 +275,6 @@ export const SpreadSheet: React.FC<Props> = ({
         saveAfterChange={saveAfterChange}
         beforeRemoveRow={beforeRemoveRow}
       />
-    </div>
+    </Wrapper>
   );
 };
