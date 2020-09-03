@@ -1,13 +1,15 @@
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback, useState } from 'react';
 import Handsontable from 'handsontable';
 import { HotTable } from '@handsontable/react';
 import 'handsontable/dist/handsontable.full.css';
-import { useAsync } from 'react-use';
+import { useAsync, useAsyncFn } from 'react-use';
 import { Record } from '@kintone/rest-api-client/lib/client/types';
 import '@kintone/rest-api-client/lib/client/types/app/properties';
+import styled from '@emotion/styled';
 import { Config } from '~/src/js/config';
 import { client } from '~/src/js/utils/client';
 import { useRecursiveTimeout } from '~/src/js/utils/utils';
+import { Loader } from '~/src/js/spreadsheet/Loader';
 
 type Props = {
   saveAfterChange: Handsontable.Hooks.Events['afterChange'];
@@ -17,6 +19,7 @@ type Props = {
   dataSchema: Handsontable.GridSettings['dataSchema'];
   data: Handsontable.GridSettings['data'];
   hotRef: React.RefObject<HotTable>;
+  isLoading: boolean;
 };
 
 const ARRAY_FIELDS = [
@@ -136,7 +139,7 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
     return { columnData };
   }, [config]);
 
-  const fetchAndLoadData = useCallback(async (): Promise<void> => {
+  const [fetchedAndLoadDataState, fetchAndLoadData] = useAsyncFn(async (): Promise<void> => {
     const hot = hotRef.current?.hotInstance ?? undefined;
     if (!hot) return;
     const { records } = await client.record.getRecords({ app: appId, query });
@@ -178,26 +181,26 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
           record: shapingRecord(excludeNonEditableFields(sourceData[row])),
         }));
 
-      const requests = [
-        {
-          method: 'PUT',
-          api: '/k/v1/records.json',
-          payload: {
-            app: appId,
-            records: updateRecords,
+      await client.bulkRequest({
+        requests: [
+          {
+            method: 'PUT',
+            api: '/k/v1/records.json',
+            payload: {
+              app: appId,
+              records: updateRecords,
+            },
           },
-        },
-        {
-          method: 'POST',
-          api: '/k/v1/records.json',
-          payload: {
-            app: appId,
-            records: insertRecords,
+          {
+            method: 'POST',
+            api: '/k/v1/records.json',
+            payload: {
+              app: appId,
+              records: insertRecords,
+            },
           },
-        },
-      ];
-
-      await client.bulkRequest({ requests });
+        ],
+      });
       fetchAndLoadData();
     },
     [appId, fetchAndLoadData],
@@ -220,19 +223,12 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
     data: [], // 繰り返しデータは取得するので初期値としてのデータはあたえない
     dataSchema: fetchedAppDataState.value?.columnData.dataSchema ?? {},
     hotRef: hotRef as React.MutableRefObject<HotTable>,
+    isLoading: fetchedAndLoadDataState.loading,
   };
 };
 
-export const SpreadSheet: React.FC<Props> = ({
-  hotRef,
-  beforeRemoveRow,
-  saveAfterChange,
-  colHeaders,
-  columns,
-  dataSchema,
-  data,
-}) => {
-  return (
+const MemoedHotTable = React.memo<Omit<Props, 'isLoading'>>(
+  ({ hotRef, beforeRemoveRow, saveAfterChange, colHeaders, columns, dataSchema, data }) => (
     <HotTable
       ref={hotRef}
       data={data}
@@ -247,5 +243,38 @@ export const SpreadSheet: React.FC<Props> = ({
       afterChange={saveAfterChange}
       beforeRemoveRow={beforeRemoveRow}
     />
+  ),
+  (prev, next) => prev.hotRef === next.hotRef && prev.columns?.length === next.columns?.length,
+);
+
+MemoedHotTable.displayName = 'MemoedHotTable';
+
+const Wrapper = styled.div`
+  position: relative;
+`;
+
+export const SpreadSheet: React.FC<Props> = ({
+  hotRef,
+  beforeRemoveRow,
+  saveAfterChange,
+  colHeaders,
+  columns,
+  dataSchema,
+  data,
+  isLoading,
+}) => {
+  return (
+    <Wrapper>
+      {isLoading && <Loader />}
+      <MemoedHotTable
+        hotRef={hotRef}
+        data={data}
+        colHeaders={colHeaders}
+        columns={columns}
+        dataSchema={dataSchema}
+        saveAfterChange={saveAfterChange}
+        beforeRemoveRow={beforeRemoveRow}
+      />
+    </Wrapper>
   );
 };
