@@ -157,7 +157,7 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
     config.autoReloadInterval ? Number(config.autoReloadInterval) * 1000 : 10000,
   ); // デフォルト10秒ごとにリロード
 
-  const handleSaveAfterChange = useCallback(
+  const [afterChangeState, handleSaveAfterChange] = useAsyncFn(
     async (changes: Handsontable.CellChange[] | null, source: Handsontable.ChangeSource) => {
       const hot = hotRef.current?.hotInstance ?? undefined;
       if (!hot) return;
@@ -206,14 +206,17 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
     [appId, fetchAndLoadData],
   );
 
-  const handleBeforeRemoveRow = async (index: number, amount: number) => {
-    const hot = hotRef.current?.hotInstance ?? undefined;
-    if (!hot) return;
-    const sourceData = hot.getSourceData();
-    const ids = sourceData.slice(index, index + amount).map((record) => record.$id.value);
-    await client.record.deleteRecords({ app: appId, ids });
-    fetchAndLoadData();
-  };
+  const [beforeRemoveRowState, handleBeforeRemoveRow] = useAsyncFn(
+    async (index: number, amount: number) => {
+      const hot = hotRef.current?.hotInstance ?? undefined;
+      if (!hot) return;
+      const sourceData = hot.getSourceData();
+      const ids = sourceData.slice(index, index + amount).map((record) => record.$id.value);
+      await client.record.deleteRecords({ app: appId, ids });
+      fetchAndLoadData();
+    },
+    [appId, fetchAndLoadData],
+  );
 
   return {
     beforeRemoveRow: handleBeforeRemoveRow,
@@ -223,7 +226,7 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
     data: [], // 繰り返しデータは取得するので初期値としてのデータはあたえない
     dataSchema: fetchedAppDataState.value?.columnData.dataSchema ?? {},
     hotRef: hotRef as React.MutableRefObject<HotTable>,
-    isLoading: fetchedAndLoadDataState.loading,
+    isLoading: fetchedAndLoadDataState.loading || afterChangeState.loading || beforeRemoveRowState.loading,
   };
 };
 
