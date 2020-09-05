@@ -6,6 +6,7 @@ import { useAsync, useAsyncFn } from 'react-use';
 import { Record } from '@kintone/rest-api-client/lib/client/types';
 import '@kintone/rest-api-client/lib/client/types/app/properties';
 import styled from '@emotion/styled';
+import { Alert } from '@kintone/kintone-ui-component';
 import { Config } from '~/src/js/config';
 import { client } from '~/src/js/utils/client';
 import { useRecursiveTimeout } from '~/src/js/utils/utils';
@@ -126,7 +127,15 @@ const checkboxRenderer: Handsontable.renderers.Checkbox = (instance, td, row, co
   return td;
 };
 
-export const useSpreadSheet = ({ config, query, appId }: { config: Config; query: string; appId: number }): Props => {
+export const useSpreadSheet = ({
+  config,
+  query,
+  appId,
+}: {
+  config: Config;
+  query: string;
+  appId: number;
+}): Props & { errorMsg: string } => {
   const hotRef = useRef<HotTable>();
   const fetchedAppDataState = useAsync(async (): Promise<{
     columnData: {
@@ -227,6 +236,11 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
     dataSchema: fetchedAppDataState.value?.columnData.dataSchema ?? {},
     hotRef: hotRef as React.MutableRefObject<HotTable>,
     isLoading: fetchedAndLoadDataState.loading || afterChangeState.loading || beforeRemoveRowState.loading,
+    errorMsg:
+      fetchedAndLoadDataState.error?.message ||
+      afterChangeState.error?.message ||
+      beforeRemoveRowState.error?.message ||
+      '',
   };
 };
 
@@ -256,7 +270,7 @@ const Wrapper = styled.div`
   position: relative;
 `;
 
-export const SpreadSheet: React.FC<Props> = ({
+export const SpreadSheet: React.FC<Props & { errorMsg: string }> = ({
   hotRef,
   beforeRemoveRow,
   saveAfterChange,
@@ -265,9 +279,11 @@ export const SpreadSheet: React.FC<Props> = ({
   dataSchema,
   data,
   isLoading,
+  errorMsg,
 }) => {
   return (
     <Wrapper>
+      {errorMsg && <Alert isVisible text={errorMsg} />}
       {isLoading && <Loader />}
       <MemoedHotTable
         hotRef={hotRef}
