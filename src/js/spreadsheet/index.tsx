@@ -12,7 +12,7 @@ import { client } from '~/src/js/utils/client';
 import { useRecursiveTimeout } from '~/src/js/utils/utils';
 import { Loader } from '~/src/js/spreadsheet/Loader';
 
-type Props = {
+type SpreadSheetProps = {
   saveAfterChange: Handsontable.Hooks.Events['afterChange'];
   beforeRemoveRow: Handsontable.Hooks.Events['beforeRemoveRow'];
   colHeaders: Handsontable.GridSettings['colHeaders'];
@@ -20,8 +20,12 @@ type Props = {
   dataSchema: Handsontable.GridSettings['dataSchema'];
   data: Handsontable.GridSettings['data'];
   hotRef: React.RefObject<HotTable>;
-  isLoading: boolean;
 };
+
+type Props = {
+  isLoading: boolean;
+  errorMessages: string;
+} & SpreadSheetProps;
 
 const ARRAY_FIELDS = [
   'CHECK_BOX',
@@ -127,15 +131,7 @@ const checkboxRenderer: Handsontable.renderers.Checkbox = (instance, td, row, co
   return td;
 };
 
-export const useSpreadSheet = ({
-  config,
-  query,
-  appId,
-}: {
-  config: Config;
-  query: string;
-  appId: number;
-}): Props & { errorMsg: string } => {
+export const useSpreadSheet = ({ config, query, appId }: { config: Config; query: string; appId: number }): Props => {
   const hotRef = useRef<HotTable>();
   const fetchedAppDataState = useAsync(async (): Promise<{
     columnData: {
@@ -236,7 +232,7 @@ export const useSpreadSheet = ({
     dataSchema: fetchedAppDataState.value?.columnData.dataSchema ?? {},
     hotRef: hotRef as React.MutableRefObject<HotTable>,
     isLoading: fetchedAndLoadDataState.loading || afterChangeState.loading || beforeRemoveRowState.loading,
-    errorMsg:
+    errorMessages:
       fetchedAndLoadDataState.error?.message ||
       afterChangeState.error?.message ||
       beforeRemoveRowState.error?.message ||
@@ -244,7 +240,7 @@ export const useSpreadSheet = ({
   };
 };
 
-const MemoedHotTable = React.memo<Omit<Props, 'isLoading'>>(
+const MemoedHotTable = React.memo<SpreadSheetProps>(
   ({ hotRef, beforeRemoveRow, saveAfterChange, colHeaders, columns, dataSchema, data }) => (
     <HotTable
       ref={hotRef}
@@ -270,7 +266,7 @@ const Wrapper = styled.div`
   position: relative;
 `;
 
-export const SpreadSheet: React.FC<Props & { errorMsg: string }> = ({
+export const SpreadSheet: React.FC<Props> = ({
   hotRef,
   beforeRemoveRow,
   saveAfterChange,
@@ -279,11 +275,11 @@ export const SpreadSheet: React.FC<Props & { errorMsg: string }> = ({
   dataSchema,
   data,
   isLoading,
-  errorMsg,
+  errorMessages,
 }) => {
   return (
     <Wrapper>
-      {errorMsg && <Alert isVisible text={errorMsg} />}
+      {errorMessages && <Alert isVisible text={errorMessages} />}
       {isLoading && <Loader />}
       <MemoedHotTable
         hotRef={hotRef}
