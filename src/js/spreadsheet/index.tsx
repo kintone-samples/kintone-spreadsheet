@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useCallback, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
+import { usePageVisibility } from 'react-page-visibility';
 import Handsontable from 'handsontable';
 import { HotTable } from '@handsontable/react';
 import 'handsontable/dist/handsontable.full.css';
@@ -133,6 +134,7 @@ const checkboxRenderer: Handsontable.renderers.Checkbox = (instance, td, row, co
 
 export const useSpreadSheet = ({ config, query, appId }: { config: Config; query: string; appId: number }): Props => {
   const hotRef = useRef<HotTable>();
+  const isPageVisible = usePageVisibility();
   const fetchedAppDataState = useAsync(async (): Promise<{
     columnData: {
       colHeaders: any[];
@@ -146,10 +148,10 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
 
   const [fetchedAndLoadDataState, fetchAndLoadData] = useAsyncFn(async (): Promise<void> => {
     const hot = hotRef.current?.hotInstance ?? undefined;
-    if (!hot) return;
+    if (!hot || !isPageVisible) return;
     const { records } = await client.record.getRecords({ app: appId, query });
     hot.loadData(records);
-  }, [appId, query]);
+  }, [appId, query, isPageVisible]);
 
   useEffect(() => {
     fetchAndLoadData();

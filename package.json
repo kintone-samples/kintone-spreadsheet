@@ -28,6 +28,7 @@
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-i18next": "^11.6.0",
+    "react-page-visibility": "^6.2.0",
     "react-use": "^15.3.3"
   },
   "devDependencies": {
