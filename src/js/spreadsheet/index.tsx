@@ -142,7 +142,9 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
       dataSchema: Handsontable.RowObject;
     };
   }> => {
-    const columnData = await getColumnData(config, appId);
+    const columnData = await getColumnData(config, appId).catch((e) => {
+      throw new Error('エラーが発生しました、設定をやりなおしてみてください。' + e.message);
+    });
     return { columnData };
   }, [config]);
 
@@ -235,6 +237,7 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
     hotRef: hotRef as React.MutableRefObject<HotTable>,
     isLoading: fetchedAndLoadDataState.loading || afterChangeState.loading || beforeRemoveRowState.loading,
     errorMessages:
+      fetchedAppDataState.error?.message ||
       fetchedAndLoadDataState.error?.message ||
       afterChangeState.error?.message ||
       beforeRemoveRowState.error?.message ||
