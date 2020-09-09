@@ -21,5 +21,8 @@
       "description": "Minimum is 10 seconds. The interval can be changed if you care about API consumption."
     },
     "success": "已保存设置。"
+  },
+  "errors": {
+    "get_column_data_error": "An error occurred, please try setting again."
   }
 }
