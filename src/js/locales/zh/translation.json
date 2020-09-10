@@ -23,6 +23,7 @@
     "success": "已保存设置。"
   },
   "errors": {
+    "plugin_no_setting_error": "Please set the kintone spreadsheet plug-in from the setting page",
     "get_column_data_error": "An error occurred, please try setting again."
   }
 }

@@ -23,6 +23,7 @@
     "success": "設定を保存しました。"
   },
   "errors": {
+    "plugin_no_setting_error": "設定画面からkintone spreadsheetプラグインの設定を行ってください",
     "get_column_data_error": "エラーが発生しました、設定をやりなおしてください。"
   }
 }
