@@ -8,6 +8,7 @@ import { Record } from '@kintone/rest-api-client/lib/client/types';
 import '@kintone/rest-api-client/lib/client/types/app/properties';
 import styled from '@emotion/styled';
 import { Alert } from '@kintone/kintone-ui-component';
+import { useTranslation } from 'react-i18next';
 import { Config } from '~/src/js/config';
 import { client } from '~/src/js/utils/client';
 import { useRecursiveTimeout } from '~/src/js/utils/utils';
@@ -133,6 +134,11 @@ const checkboxRenderer: Handsontable.renderers.Checkbox = (instance, td, row, co
 };
 
 export const useSpreadSheet = ({ config, query, appId }: { config: Config; query: string; appId: number }): Props => {
+  const { t, i18n } = useTranslation();
+  useEffect(() => {
+    i18n.changeLanguage(kintone.getLoginUser().language);
+  }, [i18n]);
+
   const hotRef = useRef<HotTable>();
   const isPageVisible = usePageVisibility();
   const fetchedAppDataState = useAsync(async (): Promise<{
@@ -142,7 +148,9 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
       dataSchema: Handsontable.RowObject;
     };
   }> => {
-    const columnData = await getColumnData(config, appId);
+    const columnData = await getColumnData(config, appId).catch((e) => {
+      throw new Error(t('errors.get_column_data_error') + ': ' + e.message);
+    });
     return { columnData };
   }, [config]);
 
@@ -235,6 +243,7 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
     hotRef: hotRef as React.MutableRefObject<HotTable>,
     isLoading: fetchedAndLoadDataState.loading || afterChangeState.loading || beforeRemoveRowState.loading,
     errorMessages:
+      fetchedAppDataState.error?.message ||
       fetchedAndLoadDataState.error?.message ||
       afterChangeState.error?.message ||
       beforeRemoveRowState.error?.message ||

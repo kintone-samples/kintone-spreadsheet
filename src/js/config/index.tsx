@@ -14,7 +14,7 @@ export interface Config {
 }
 
 export const isValidConfig = (config: any): config is Config => {
-  if ('elementId' in config && 'columns' in config && Array.isArray(config.columns)) {
+  if (config && 'elementId' in config && 'columns' in config && Array.isArray(config.columns)) {
     return true;
   }
   return false;

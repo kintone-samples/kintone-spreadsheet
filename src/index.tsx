@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import ReactDOM from 'react-dom';
+import { useTranslation } from 'react-i18next';
+import { Alert } from '@kintone/kintone-ui-component';
 import 'handsontable/dist/handsontable.full.css';
 import { fetchConfig } from './js/utils/utils';
 import { isValidConfig, Config } from '~/src/js/config';
@@ -16,12 +18,21 @@ const Container: React.FC<ContainerProps> = ({ config, query, appId }) => {
   return <SpreadSheet {...spreadSheetProps} />;
 };
 
+const SettingError: React.FC = () => {
+  const { t, i18n } = useTranslation();
+  useEffect(() => {
+    i18n.changeLanguage(kintone.getLoginUser().language);
+  }, [i18n]);
+  return <Alert isVisible text={t('errors.plugin_no_setting_error')} />;
+};
+
 ((PLUGIN_ID) => {
   kintone.events.on('app.record.index.show', (event) => {
     (async () => {
       const config = await fetchConfig(PLUGIN_ID);
+      if (!config) return event; // if never setting kintone, return event;
       if (!isValidConfig(config)) {
-        alert('設定画面からプラグインの設定を行ってください');
+        ReactDOM.render(<SettingError />, kintone.app.getHeaderSpaceElement());
         return event;
       }
       const containerElement = document.getElementById(config.elementId);
