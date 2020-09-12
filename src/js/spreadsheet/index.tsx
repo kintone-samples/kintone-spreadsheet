@@ -162,8 +162,9 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
   }, [appId, query, isPageVisible]);
 
   useEffect(() => {
+    if (!fetchedAppDataState.value) return;
     fetchAndLoadData();
-  }, [fetchAndLoadData, query]);
+  }, [fetchAndLoadData, fetchedAppDataState.value]);
 
   useRecursiveTimeout(
     async () => {
