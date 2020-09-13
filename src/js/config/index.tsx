@@ -13,8 +13,14 @@ export interface Config {
   autoReloadInterval: number; // ms
 }
 
-export const isValidConfig = (config: any): config is Config => {
-  if (config && 'elementId' in config && 'columns' in config && Array.isArray(config.columns)) {
+export const isValidConfig = (config: unknown): config is Config => {
+  if (
+    typeof config === 'object' &&
+    config != null &&
+    'elementId' in config &&
+    'columns' in config &&
+    Array.isArray(config['columns'])
+  ) {
     return true;
   }
   return false;
