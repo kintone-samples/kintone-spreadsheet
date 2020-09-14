@@ -1,4 +1,6 @@
+import { useAsync } from 'react-use';
 import React, { useState, useCallback, useEffect, SyntheticEvent } from 'react';
+import { client } from '~/src/js/utils/client';
 
 export interface FormField {
   code: string;
@@ -70,6 +72,10 @@ const useFormFieldSelectTable = (
   useEffect(() => {
     onChange(selectedFields);
   }, [onChange, selectedFields]);
+
+  const fetchFieldsState = useAsync(async () => {
+    const result = client.app.getFormFields({ app: kintone.app.getId() || '', preview: true });
+  }, []);
 
   useEffect(() => {
     (async () => {
