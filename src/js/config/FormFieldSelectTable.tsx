@@ -77,8 +77,13 @@ const useFormFieldSelectTable = (
   const fetchFieldsState = useAsync(async () => {
     const { properties } = await client.app.getFormFields({ app: kintone.app.getId() || '', preview: true });
     const mappedFields = Object.entries(properties).map(([, v]) => v);
-    setAppfields(mappedFields);
+    return { fields: mappedFields };
   }, []);
+
+  useEffect(() => {
+    if (!fetchFieldsState.value) return;
+    setAppfields(fetchFieldsState.value.fields);
+  }, [fetchFieldsState.value]);
 
   const onClickAddColumn = useCallback(
     (index: number) => () =>
