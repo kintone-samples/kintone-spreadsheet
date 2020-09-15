@@ -1,4 +1,6 @@
+import { useAsync } from 'react-use';
 import React, { useState, useCallback, useEffect, SyntheticEvent } from 'react';
+import { client } from '~/src/js/utils/client';
 
 export interface FormField {
   code: string;
@@ -71,16 +73,17 @@ const useFormFieldSelectTable = (
     onChange(selectedFields);
   }, [onChange, selectedFields]);
 
+  // TODO: loading
+  const fetchFieldsState = useAsync(async () => {
+    const { properties } = await client.app.getFormFields({ app: kintone.app.getId() || '', preview: true });
+    const mappedFields = Object.entries(properties).map(([, v]) => v);
+    return { fields: mappedFields };
+  }, []);
+
   useEffect(() => {
-    (async () => {
-      // FIXME: Use form field api or form layout api
-      const { properties } = (await kintone.api(kintone.api.url('/k/v1/preview/form', true), 'GET', {
-        app: kintone.app.getId(),
-      })) as FormApiResponse;
-      setAppfields(properties);
-      if (selectedFields.length === 0) setSelectedFields([{ code: properties[0]?.code || '' }]);
-    })();
-  }, [selectedFields.length, setAppfields, setSelectedFields]);
+    if (!fetchFieldsState.value) return;
+    setAppfields(fetchFieldsState.value.fields);
+  }, [fetchFieldsState.value]);
 
   const onClickAddColumn = useCallback(
     (index: number) => () =>
