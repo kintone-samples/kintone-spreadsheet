@@ -9,6 +9,7 @@ import '@kintone/rest-api-client/lib/client/types/app/properties';
 import styled from '@emotion/styled';
 import { Alert } from '@kintone/kintone-ui-component';
 import { useTranslation } from 'react-i18next';
+import ReactDOM from 'react-dom';
 import { Config } from '~/src/js/config';
 import { client } from '~/src/js/utils/client';
 import { useRecursiveTimeout } from '~/src/js/utils/utils';
@@ -128,8 +129,19 @@ const userSelectRenderer: Handsontable.renderers.Base = (instance, td, row, col,
 
 const checkboxRenderer: Handsontable.renderers.Checkbox = (instance, td, row, col, prop, value) => {
   if (!value.length) return td;
-  td.innerText = value.join(', ');
-  td.style.color = '#777';
+
+  // Experimental
+  const Dom = () => (
+    <div>
+      {value.map((v, i) => (
+        <label key={i}>
+          <input type="checkbox" />
+          {v}
+        </label>
+      ))}
+    </div>
+  );
+  ReactDOM.render(<Dom />, td);
   return td;
 };
 
