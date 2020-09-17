@@ -5,7 +5,6 @@ import { HotTable } from '@handsontable/react';
 import 'handsontable/dist/handsontable.full.css';
 import { useAsync, useAsyncFn } from 'react-use';
 import { Record } from '@kintone/rest-api-client/lib/client/types';
-import '@kintone/rest-api-client/lib/client/types/app/properties';
 import styled from '@emotion/styled';
 import { Alert } from '@kintone/kintone-ui-component';
 import { useTranslation } from 'react-i18next';
@@ -58,6 +57,23 @@ const NOT_ALLOWED_EDIT_FIELDS = [
   'GROUP_SELECT',
 ];
 
+declare type Options = {
+  [optionName: string]: {
+    label: string;
+    index: string;
+  };
+};
+declare type CheckBoxFieldProperty = {
+  type: 'CHECK_BOX';
+  code: string;
+  label: string;
+  noLabel: boolean;
+  required: boolean;
+  defaultValue: string[];
+  options: Options;
+  align: 'HORIZONTAL' | 'VERTICAL';
+};
+
 const excludeNonEditableFields = (record: Record) =>
   Object.fromEntries(Object.entries(record).filter(([, v]) => NOT_ALLOWED_EDIT_FIELDS.indexOf(v.type) === -1));
 
@@ -99,7 +115,7 @@ const getColumnData = async (config: Config, appId: number) => {
     }
 
     if (resp.properties[code].type === 'CHECK_BOX') {
-      columnData.renderer = checkboxRenderer;
+      columnData.renderer = checkboxRenderer(resp.properties[code] as CheckBoxFieldProperty);
     }
 
     // set read only
@@ -127,16 +143,23 @@ const userSelectRenderer: Handsontable.renderers.Base = (instance, td, row, col,
   return td;
 };
 
-const checkboxRenderer: Handsontable.renderers.Checkbox = (instance, td, row, col, prop, value) => {
-  if (!value.length) return td;
-
+const checkboxRenderer = (property: CheckBoxFieldProperty): Handsontable.renderers.Checkbox => (
+  instance,
+  td,
+  row,
+  col,
+  prop,
+  value,
+) => {
   // Experimental
+  // https://codesandbox.io/s/advanced-handsontablereact-implementation-using-hotcolumn-878mz?from-embed=&file=/src/index.js
   const Dom = () => (
     <div>
-      {value.map((v, i) => (
+      {Object.values(property.options).map((v, i) => (
         <label key={i}>
+          {/* TODO: Valueをみてチェック状態にする */}
           <input type="checkbox" />
-          {v}
+          {v.label}
         </label>
       ))}
     </div>
