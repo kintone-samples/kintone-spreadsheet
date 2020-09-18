@@ -157,8 +157,7 @@ const checkboxRenderer = (property: CheckBoxFieldProperty): Handsontable.rendere
     <div>
       {Object.values(property.options).map((v, i) => (
         <label key={i}>
-          {/* TODO: Valueをみてチェック状態にする */}
-          <input type="checkbox" />
+          <input type="checkbox" defaultChecked={value.includes(v.label)} />
           {v.label}
         </label>
       ))}
