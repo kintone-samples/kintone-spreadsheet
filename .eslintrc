@@ -40,7 +40,12 @@
     "sort-keys": "off",
     "no-restricted-imports": ["error", { "patterns": ["../*"] }],
     "react-hooks/rules-of-hooks": "error",
-    "react-hooks/exhaustive-deps": "error",
+    "react-hooks/exhaustive-deps": [
+      "error",
+      {
+        "additionalHooks": "(useAsync*)"
+      }
+    ],
     "eqeqeq": ["error", "smart"],
     "quotes": ["error", "single"]
   },

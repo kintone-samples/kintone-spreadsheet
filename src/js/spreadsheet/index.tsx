@@ -186,7 +186,7 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
       throw new Error(t('errors.get_column_data_error') + ': ' + e.message);
     });
     return { columnData };
-  }, [config]);
+  }, [appId, config, t]);
 
   const [fetchedAndLoadDataState, fetchAndLoadData] = useAsyncFn(async (): Promise<void> => {
     const hot = hotRef.current?.hotInstance ?? undefined;
