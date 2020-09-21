@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { usePageVisibility } from 'react-page-visibility';
 import Handsontable from 'handsontable';
 import { HotTable } from '@handsontable/react';
@@ -115,7 +115,7 @@ const getColumnData = async (config: Config, appId: number) => {
     }
 
     if (resp.properties[code].type === 'CHECK_BOX') {
-      columnData.renderer = checkboxRenderer(resp.properties[code] as CheckBoxFieldProperty);
+      columnData.renderer = checkboxRenderer(resp.properties[code] as CheckBoxFieldProperty, appId);
     }
 
     // set read only
@@ -143,7 +143,7 @@ const userSelectRenderer: Handsontable.renderers.Base = (instance, td, row, col,
   return td;
 };
 
-const checkboxRenderer = (property: CheckBoxFieldProperty): Handsontable.renderers.Checkbox => (
+const checkboxRenderer = (property: CheckBoxFieldProperty, appId: number): Handsontable.renderers.Checkbox => (
   instance,
   td,
   row,
@@ -153,16 +153,83 @@ const checkboxRenderer = (property: CheckBoxFieldProperty): Handsontable.rendere
 ) => {
   // Experimental
   // https://codesandbox.io/s/advanced-handsontablereact-implementation-using-hotcolumn-878mz?from-embed=&file=/src/index.js
-  const Dom = () => (
-    <div>
-      {Object.values(property.options).map((v, i) => (
-        <label key={i}>
-          <input type="checkbox" defaultChecked={value.includes(v.label)} />
-          {v.label}
-        </label>
-      ))}
-    </div>
-  );
+
+  const Dom = () => {
+    const sourceData = instance.getSourceData();
+    const [onChangeState, onChange] = useAsyncFn(async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const name = event.target.name;
+      const beforeValues = sourceData[row]?.[name]?.value as string[];
+      const nextValues = (() => {
+        // すでに値をもっているか
+        const exsitedValueIndex = beforeValues.findIndex((v) => v === event.target.getAttribute('data-name'));
+        if (exsitedValueIndex < 0) {
+          if (event.target.checked) {
+            return [...beforeValues, event.target.getAttribute('data-name')];
+          } else {
+            return [...beforeValues];
+          }
+        } else {
+          if (event.target.checked) {
+            return [...beforeValues];
+          } else {
+            return [...beforeValues.slice(0, exsitedValueIndex), ...beforeValues.slice(exsitedValueIndex + 1)];
+          }
+        }
+      })();
+
+      // TODO: 本体側と共通化
+      client.bulkRequest({
+        requests: [
+          {
+            method: 'PUT',
+            api: '/k/v1/records.json',
+            payload: {
+              app: appId,
+              records:
+                sourceData[row]?.$id?.value != null
+                  ? [
+                      {
+                        id: sourceData[row].$id.value,
+                        record: {
+                          ...shapingRecord(excludeNonEditableFields(sourceData[row])),
+                          [name]: { value: nextValues },
+                        },
+                      },
+                    ]
+                  : [],
+            },
+          },
+          {
+            method: 'POST',
+            api: '/k/v1/records.json',
+            payload: {
+              app: appId,
+              records:
+                sourceData[row]?.$id?.value == null
+                  ? [{ ...shapingRecord(excludeNonEditableFields(sourceData[row])), [name]: { value: nextValues } }]
+                  : [],
+            },
+          },
+        ],
+      });
+    });
+    return (
+      <div>
+        {Object.values(property.options).map((v, i) => (
+          <label key={i}>
+            <input
+              type="checkbox"
+              defaultChecked={value.includes(v.label)}
+              onChange={onChange}
+              data-name={v.label}
+              name={property.code}
+            />
+            {v.label}
+          </label>
+        ))}
+      </div>
+    );
+  };
   ReactDOM.render(<Dom />, td);
   return td;
 };
