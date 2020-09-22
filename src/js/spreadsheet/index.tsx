@@ -143,6 +143,79 @@ const userSelectRenderer: Handsontable.renderers.Base = (instance, td, row, col,
   return td;
 };
 
+const useCheckboxRenderer = ({
+  instance,
+  row,
+  appId,
+}: {
+  instance: HotTable['hotInstance'];
+  row: number;
+  appId: number;
+}) => {
+  const sourceData = instance.getSourceData();
+  const [onChangeState, onChange] = useAsyncFn(async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const name = event.target.name;
+    const beforeValues = sourceData[row]?.[name]?.value as string[];
+    const nextValues = (() => {
+      // すでに値をもっているか
+      const exsitedValueIndex = beforeValues.findIndex((v) => v === event.target.getAttribute('data-name'));
+      if (exsitedValueIndex < 0) {
+        if (event.target.checked) {
+          return [...beforeValues, event.target.getAttribute('data-name')];
+        } else {
+          return [...beforeValues];
+        }
+      } else {
+        if (event.target.checked) {
+          return [...beforeValues];
+        } else {
+          return [...beforeValues.slice(0, exsitedValueIndex), ...beforeValues.slice(exsitedValueIndex + 1)];
+        }
+      }
+    })();
+
+    // TODO: 本体側と共通化
+    client.bulkRequest({
+      requests: [
+        {
+          method: 'PUT',
+          api: '/k/v1/records.json',
+          payload: {
+            app: appId,
+            records:
+              sourceData[row]?.$id?.value != null
+                ? [
+                    {
+                      id: sourceData[row].$id.value,
+                      record: {
+                        ...shapingRecord(excludeNonEditableFields(sourceData[row])),
+                        [name]: { value: nextValues },
+                      },
+                    },
+                  ]
+                : [],
+          },
+        },
+        {
+          method: 'POST',
+          api: '/k/v1/records.json',
+          payload: {
+            app: appId,
+            records:
+              sourceData[row]?.$id?.value == null
+                ? [{ ...shapingRecord(excludeNonEditableFields(sourceData[row])), [name]: { value: nextValues } }]
+                : [],
+          },
+        },
+      ],
+    });
+  });
+  return {
+    onChangeState,
+    onChange,
+  };
+};
+
 const checkboxRenderer = (property: CheckBoxFieldProperty, appId: number): Handsontable.renderers.Checkbox => (
   instance,
   td,
@@ -155,64 +228,7 @@ const checkboxRenderer = (property: CheckBoxFieldProperty, appId: number): Hands
   // https://codesandbox.io/s/advanced-handsontablereact-implementation-using-hotcolumn-878mz?from-embed=&file=/src/index.js
 
   const Dom = () => {
-    const sourceData = instance.getSourceData();
-    const [onChangeState, onChange] = useAsyncFn(async (event: React.ChangeEvent<HTMLInputElement>) => {
-      const name = event.target.name;
-      const beforeValues = sourceData[row]?.[name]?.value as string[];
-      const nextValues = (() => {
-        // すでに値をもっているか
-        const exsitedValueIndex = beforeValues.findIndex((v) => v === event.target.getAttribute('data-name'));
-        if (exsitedValueIndex < 0) {
-          if (event.target.checked) {
-            return [...beforeValues, event.target.getAttribute('data-name')];
-          } else {
-            return [...beforeValues];
-          }
-        } else {
-          if (event.target.checked) {
-            return [...beforeValues];
-          } else {
-            return [...beforeValues.slice(0, exsitedValueIndex), ...beforeValues.slice(exsitedValueIndex + 1)];
-          }
-        }
-      })();
-
-      // TODO: 本体側と共通化
-      client.bulkRequest({
-        requests: [
-          {
-            method: 'PUT',
-            api: '/k/v1/records.json',
-            payload: {
-              app: appId,
-              records:
-                sourceData[row]?.$id?.value != null
-                  ? [
-                      {
-                        id: sourceData[row].$id.value,
-                        record: {
-                          ...shapingRecord(excludeNonEditableFields(sourceData[row])),
-                          [name]: { value: nextValues },
-                        },
-                      },
-                    ]
-                  : [],
-            },
-          },
-          {
-            method: 'POST',
-            api: '/k/v1/records.json',
-            payload: {
-              app: appId,
-              records:
-                sourceData[row]?.$id?.value == null
-                  ? [{ ...shapingRecord(excludeNonEditableFields(sourceData[row])), [name]: { value: nextValues } }]
-                  : [],
-            },
-          },
-        ],
-      });
-    });
+    const { onChange } = useCheckboxRenderer({ appId: appId, instance, row });
     return (
       <div>
         {Object.values(property.options).map((v, i) => (
