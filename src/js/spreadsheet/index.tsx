@@ -85,7 +85,7 @@ const shapingRecord = (record: Record) =>
     ]),
   );
 
-const getColumnData = async (config: Config, appId: number) => {
+const getColumnData = async (config: Config, appId: number, onChange: any) => {
   const resp = await client.app.getFormFields({ app: appId });
   // ヘッダーの取得
   const colHeaders = config.columns.map(({ code }) => {
@@ -115,7 +115,7 @@ const getColumnData = async (config: Config, appId: number) => {
     }
 
     if (resp.properties[code].type === 'CHECK_BOX') {
-      columnData.renderer = checkboxRenderer(resp.properties[code] as CheckBoxFieldProperty, appId);
+      columnData.renderer = checkboxRenderer(resp.properties[code] as CheckBoxFieldProperty, onChange);
     }
 
     // set read only
@@ -153,82 +153,81 @@ const useCheckboxRenderer = ({
   appId: number;
 }) => {
   const sourceData = instance.getSourceData();
-  const [onChangeState, onChange] = useAsyncFn(async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const name = event.target.name;
-    const beforeValues = sourceData[row]?.[name]?.value as string[];
-    const nextValues = (() => {
-      // すでに値をもっているか
-      const exsitedValueIndex = beforeValues.findIndex((v) => v === event.target.getAttribute('data-name'));
-      if (exsitedValueIndex < 0) {
-        if (event.target.checked) {
-          return [...beforeValues, event.target.getAttribute('data-name')];
+  const [onChangeState, onChange] = useAsyncFn(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const name = event.target.name;
+      const beforeValues = sourceData[row]?.[name]?.value as string[];
+      const nextValues = (() => {
+        // すでに値をもっているか
+        const exsitedValueIndex = beforeValues.findIndex((v) => v === event.target.getAttribute('data-name'));
+        if (exsitedValueIndex < 0) {
+          if (event.target.checked) {
+            return [...beforeValues, event.target.getAttribute('data-name')];
+          } else {
+            return [...beforeValues];
+          }
         } else {
-          return [...beforeValues];
+          if (event.target.checked) {
+            return [...beforeValues];
+          } else {
+            return [...beforeValues.slice(0, exsitedValueIndex), ...beforeValues.slice(exsitedValueIndex + 1)];
+          }
         }
-      } else {
-        if (event.target.checked) {
-          return [...beforeValues];
-        } else {
-          return [...beforeValues.slice(0, exsitedValueIndex), ...beforeValues.slice(exsitedValueIndex + 1)];
-        }
-      }
-    })();
+      })();
 
-    // TODO: 本体側と共通化
-    client.bulkRequest({
-      requests: [
-        {
-          method: 'PUT',
-          api: '/k/v1/records.json',
-          payload: {
-            app: appId,
-            records:
-              sourceData[row]?.$id?.value != null
-                ? [
-                    {
-                      id: sourceData[row].$id.value,
-                      record: {
-                        ...shapingRecord(excludeNonEditableFields(sourceData[row])),
-                        [name]: { value: nextValues },
+      // TODO: 本体側と共通化
+      client.bulkRequest({
+        requests: [
+          {
+            method: 'PUT',
+            api: '/k/v1/records.json',
+            payload: {
+              app: appId,
+              records:
+                sourceData[row]?.$id?.value != null
+                  ? [
+                      {
+                        id: sourceData[row].$id.value,
+                        record: {
+                          ...shapingRecord(excludeNonEditableFields(sourceData[row])),
+                          [name]: { value: nextValues },
+                        },
                       },
-                    },
-                  ]
-                : [],
+                    ]
+                  : [],
+            },
           },
-        },
-        {
-          method: 'POST',
-          api: '/k/v1/records.json',
-          payload: {
-            app: appId,
-            records:
-              sourceData[row]?.$id?.value == null
-                ? [{ ...shapingRecord(excludeNonEditableFields(sourceData[row])), [name]: { value: nextValues } }]
-                : [],
+          {
+            method: 'POST',
+            api: '/k/v1/records.json',
+            payload: {
+              app: appId,
+              records:
+                sourceData[row]?.$id?.value == null
+                  ? [{ ...shapingRecord(excludeNonEditableFields(sourceData[row])), [name]: { value: nextValues } }]
+                  : [],
+            },
           },
-        },
-      ],
-    });
-  });
+        ],
+      });
+    },
+    [appId, row, sourceData],
+  );
   return {
     onChangeState,
     onChange,
   };
 };
 
-const checkboxRenderer = (property: CheckBoxFieldProperty, appId: number): Handsontable.renderers.Checkbox => (
-  instance,
-  td,
-  row,
-  col,
-  prop,
-  value,
-) => {
+const checkboxRenderer = (
+  property: CheckBoxFieldProperty,
+  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void,
+): Handsontable.renderers.Checkbox => (instance, td, row, col, prop, value) => {
   // Experimental
   // https://codesandbox.io/s/advanced-handsontablereact-implementation-using-hotcolumn-878mz?from-embed=&file=/src/index.js
 
   const Dom = () => {
-    const { onChange } = useCheckboxRenderer({ appId: appId, instance, row });
+    // const { onChange } = useCheckboxRenderer({ appId: appId, instance, row });
     return (
       <div>
         {Object.values(property.options).map((v, i) => (
@@ -236,7 +235,7 @@ const checkboxRenderer = (property: CheckBoxFieldProperty, appId: number): Hands
             <input
               type="checkbox"
               defaultChecked={value.includes(v.label)}
-              onChange={onChange}
+              onChange={(event) => onChange(event, row)}
               data-name={v.label}
               name={property.code}
             />
@@ -258,6 +257,71 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
 
   const hotRef = useRef<HotTable>();
   const isPageVisible = usePageVisibility();
+
+  const [onChangeState, onChange] = useAsyncFn(
+    async (event: React.ChangeEvent<HTMLInputElement>, row: number) => {
+      const hot = hotRef.current?.hotInstance ?? undefined;
+      if (!hot || !isPageVisible) return;
+      const sourceData = hot.getSourceData();
+      const name = event.target.name;
+      const beforeValues = sourceData[row]?.[name]?.value as string[];
+      const nextValues = (() => {
+        // すでに値をもっているか
+        const exsitedValueIndex = beforeValues.findIndex((v) => v === event.target.getAttribute('data-name'));
+        if (exsitedValueIndex < 0) {
+          if (event.target.checked) {
+            return [...beforeValues, event.target.getAttribute('data-name')];
+          } else {
+            return [...beforeValues];
+          }
+        } else {
+          if (event.target.checked) {
+            return [...beforeValues];
+          } else {
+            return [...beforeValues.slice(0, exsitedValueIndex), ...beforeValues.slice(exsitedValueIndex + 1)];
+          }
+        }
+      })();
+
+      // TODO: 本体側と共通化
+      client.bulkRequest({
+        requests: [
+          {
+            method: 'PUT',
+            api: '/k/v1/records.json',
+            payload: {
+              app: appId,
+              records:
+                sourceData[row]?.$id?.value != null
+                  ? [
+                      {
+                        id: sourceData[row].$id.value,
+                        record: {
+                          ...shapingRecord(excludeNonEditableFields(sourceData[row])),
+                          [name]: { value: nextValues },
+                        },
+                      },
+                    ]
+                  : [],
+            },
+          },
+          {
+            method: 'POST',
+            api: '/k/v1/records.json',
+            payload: {
+              app: appId,
+              records:
+                sourceData[row]?.$id?.value == null
+                  ? [{ ...shapingRecord(excludeNonEditableFields(sourceData[row])), [name]: { value: nextValues } }]
+                  : [],
+            },
+          },
+        ],
+      });
+    },
+    [appId, isPageVisible],
+  );
+
   const fetchedAppDataState = useAsync(async (): Promise<{
     columnData: {
       colHeaders: any[];
@@ -265,11 +329,11 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
       dataSchema: Handsontable.RowObject;
     };
   }> => {
-    const columnData = await getColumnData(config, appId).catch((e) => {
+    const columnData = await getColumnData(config, appId, onChange).catch((e) => {
       throw new Error(t('errors.get_column_data_error') + ': ' + e.message);
     });
     return { columnData };
-  }, [appId, config, t]);
+  }, [appId, config, onChange, t]);
 
   const [fetchedAndLoadDataState, fetchAndLoadData] = useAsyncFn(async (): Promise<void> => {
     const hot = hotRef.current?.hotInstance ?? undefined;
@@ -359,12 +423,17 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
     data: [], // 繰り返しデータは取得するので初期値としてのデータはあたえない
     dataSchema: fetchedAppDataState.value?.columnData.dataSchema ?? {},
     hotRef: hotRef as React.MutableRefObject<HotTable>,
-    isLoading: fetchedAndLoadDataState.loading || afterChangeState.loading || beforeRemoveRowState.loading,
+    isLoading:
+      fetchedAndLoadDataState.loading ||
+      afterChangeState.loading ||
+      beforeRemoveRowState.loading ||
+      onChangeState.loading,
     errorMessages:
       fetchedAppDataState.error?.message ||
       fetchedAndLoadDataState.error?.message ||
       afterChangeState.error?.message ||
       beforeRemoveRowState.error?.message ||
+      onChangeState.error?.message ||
       '',
   };
 };
