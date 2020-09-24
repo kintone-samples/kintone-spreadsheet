@@ -148,6 +148,7 @@ const checkboxRenderer = (
   onChange: (event: React.ChangeEvent<HTMLInputElement>, row: number) => void,
 ): Handsontable.renderers.Checkbox => (instance, td, row, col, prop, value) => {
   // Experimental
+  // eslint-disable-next-line max-len
   // https://codesandbox.io/s/advanced-handsontablereact-implementation-using-hotcolumn-878mz?from-embed=&file=/src/index.js
 
   const Dom = () => {
@@ -160,7 +161,7 @@ const checkboxRenderer = (
               defaultChecked={value.includes(v.label)}
               onChange={(event) => onChange(event, row)}
               data-name={v.label}
-              name={property.code}
+              data-code={property.code}
             />
             {v.label}
           </label>
@@ -187,14 +188,15 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
       const hot = hotRef.current?.hotInstance ?? undefined;
       if (!hot) return;
       const sourceData = hot.getSourceData();
-      const name = event.target.name;
-      const beforeValues = sourceData[row]?.[name]?.value as string[];
+      const code = event.target.getAttribute('data-code') || '';
+      const value = event.target.getAttribute('data-name') || '';
+      const beforeValues = sourceData[row]?.[code]?.value as string[];
       const nextValues = (() => {
         // すでに値をもっているか
-        const exsitedValueIndex = beforeValues.findIndex((v) => v === event.target.getAttribute('data-name'));
+        const exsitedValueIndex = beforeValues.findIndex((v) => v === value);
         if (exsitedValueIndex < 0) {
           if (event.target.checked) {
-            return [...beforeValues, event.target.getAttribute('data-name')];
+            return [...beforeValues, value];
           } else {
             return [...beforeValues];
           }
@@ -222,7 +224,7 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
                         id: sourceData[row].$id.value,
                         record: {
                           ...shapingRecord(excludeNonEditableFields(sourceData[row])),
-                          [name]: { value: nextValues },
+                          [code]: { value: nextValues },
                         },
                       },
                     ]
@@ -236,7 +238,7 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
               app: appId,
               records:
                 sourceData[row]?.$id?.value == null
-                  ? [{ ...shapingRecord(excludeNonEditableFields(sourceData[row])), [name]: { value: nextValues } }]
+                  ? [{ ...shapingRecord(excludeNonEditableFields(sourceData[row])), [code]: { value: nextValues } }]
                   : [],
             },
           },
