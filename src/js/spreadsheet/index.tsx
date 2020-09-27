@@ -182,6 +182,13 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
   const hotRef = useRef<HotTable>();
   const isPageVisible = usePageVisibility();
 
+  const [fetchedAndLoadDataState, fetchAndLoadData] = useAsyncFn(async (): Promise<void> => {
+    const hot = hotRef.current?.hotInstance ?? undefined;
+    if (!hot || !isPageVisible) return;
+    const { records } = await client.record.getRecords({ app: appId, query });
+    hot.loadData(records);
+  }, [appId, query, isPageVisible]);
+
   // TODO: Hooksとして切り出す
   const [onChangeCheckboxState, onChangeCheckbox] = useAsyncFn(
     async (event: React.ChangeEvent<HTMLInputElement>, row: number) => {
@@ -211,7 +218,7 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
 
       // TODO: 本体側と共通化
       // 送信したあとの再フェッチ
-      return client.bulkRequest({
+      await client.bulkRequest({
         requests: [
           {
             method: 'PUT',
@@ -245,10 +252,10 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
           },
         ],
       });
+      fetchAndLoadData();
     },
-    [appId],
+    [appId, fetchAndLoadData],
   );
-
   const fetchedAppDataState = useAsync(async (): Promise<{
     columnData: {
       colHeaders: any[];
@@ -261,13 +268,6 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
     });
     return { columnData };
   }, [appId, config, onChangeCheckbox, t]);
-
-  const [fetchedAndLoadDataState, fetchAndLoadData] = useAsyncFn(async (): Promise<void> => {
-    const hot = hotRef.current?.hotInstance ?? undefined;
-    if (!hot || !isPageVisible) return;
-    const { records } = await client.record.getRecords({ app: appId, query });
-    hot.loadData(records);
-  }, [appId, query, isPageVisible]);
 
   useEffect(() => {
     if (!fetchedAppDataState.value) return;
