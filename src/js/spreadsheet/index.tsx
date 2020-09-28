@@ -217,7 +217,6 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
       })();
 
       // TODO: 本体側と共通化
-      // 送信したあとの再フェッチ
       await client.bulkRequest({
         requests: [
           {
