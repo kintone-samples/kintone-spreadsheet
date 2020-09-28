@@ -1,14 +1,14 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { usePageVisibility } from 'react-page-visibility';
 import Handsontable from 'handsontable';
 import { HotTable } from '@handsontable/react';
 import 'handsontable/dist/handsontable.full.css';
 import { useAsync, useAsyncFn } from 'react-use';
 import { Record } from '@kintone/rest-api-client/lib/client/types';
-import '@kintone/rest-api-client/lib/client/types/app/properties';
 import styled from '@emotion/styled';
 import { Alert } from '@kintone/kintone-ui-component';
 import { useTranslation } from 'react-i18next';
+import ReactDOM from 'react-dom';
 import { Config } from '~/src/js/config';
 import { client } from '~/src/js/utils/client';
 import { useRecursiveTimeout } from '~/src/js/utils/utils';
@@ -57,6 +57,23 @@ const NOT_ALLOWED_EDIT_FIELDS = [
   'GROUP_SELECT',
 ];
 
+declare type Options = {
+  [optionName: string]: {
+    label: string;
+    index: string;
+  };
+};
+declare type CheckBoxFieldProperty = {
+  type: 'CHECK_BOX';
+  code: string;
+  label: string;
+  noLabel: boolean;
+  required: boolean;
+  defaultValue: string[];
+  options: Options;
+  align: 'HORIZONTAL' | 'VERTICAL';
+};
+
 const excludeNonEditableFields = (record: Record) =>
   Object.fromEntries(Object.entries(record).filter(([, v]) => NOT_ALLOWED_EDIT_FIELDS.indexOf(v.type) === -1));
 
@@ -68,7 +85,7 @@ const shapingRecord = (record: Record) =>
     ]),
   );
 
-const getColumnData = async (config: Config, appId: number) => {
+const getColumnData = async (config: Config, appId: number, onChange: any) => {
   const resp = await client.app.getFormFields({ app: appId });
   // ヘッダーの取得
   const colHeaders = config.columns.map(({ code }) => {
@@ -98,7 +115,7 @@ const getColumnData = async (config: Config, appId: number) => {
     }
 
     if (resp.properties[code].type === 'CHECK_BOX') {
-      columnData.renderer = checkboxRenderer;
+      columnData.renderer = checkboxRenderer(resp.properties[code] as CheckBoxFieldProperty, onChange);
     }
 
     // set read only
@@ -126,10 +143,33 @@ const userSelectRenderer: Handsontable.renderers.Base = (instance, td, row, col,
   return td;
 };
 
-const checkboxRenderer: Handsontable.renderers.Checkbox = (instance, td, row, col, prop, value) => {
-  if (!value.length) return td;
-  td.innerText = value.join(', ');
-  td.style.color = '#777';
+const checkboxRenderer = (
+  property: CheckBoxFieldProperty,
+  onChange: (event: React.ChangeEvent<HTMLInputElement>, row: number) => void,
+): Handsontable.renderers.Checkbox => (instance, td, row, col, prop, value) => {
+  // Experimental
+  // eslint-disable-next-line max-len
+  // https://codesandbox.io/s/advanced-handsontablereact-implementation-using-hotcolumn-878mz?from-embed=&file=/src/index.js
+
+  const Dom = () => {
+    return (
+      <div>
+        {Object.values(property.options).map((v, i) => (
+          <label key={i}>
+            <input
+              type="checkbox"
+              defaultChecked={value.includes(v.label)}
+              onChange={(event) => onChange(event, row)}
+              data-name={v.label}
+              data-code={property.code}
+            />
+            {v.label}
+          </label>
+        ))}
+      </div>
+    );
+  };
+  ReactDOM.render(<Dom />, td);
   return td;
 };
 
@@ -141,18 +181,6 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
 
   const hotRef = useRef<HotTable>();
   const isPageVisible = usePageVisibility();
-  const fetchedAppDataState = useAsync(async (): Promise<{
-    columnData: {
-      colHeaders: any[];
-      columnDatas: Handsontable.ColumnSettings[];
-      dataSchema: Handsontable.RowObject;
-    };
-  }> => {
-    const columnData = await getColumnData(config, appId).catch((e) => {
-      throw new Error(t('errors.get_column_data_error') + ': ' + e.message);
-    });
-    return { columnData };
-  }, [config]);
 
   const [fetchedAndLoadDataState, fetchAndLoadData] = useAsyncFn(async (): Promise<void> => {
     const hot = hotRef.current?.hotInstance ?? undefined;
@@ -160,6 +188,85 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
     const { records } = await client.record.getRecords({ app: appId, query });
     hot.loadData(records);
   }, [appId, query, isPageVisible]);
+
+  // TODO: Hooksとして切り出す
+  const [onChangeCheckboxState, onChangeCheckbox] = useAsyncFn(
+    async (event: React.ChangeEvent<HTMLInputElement>, row: number) => {
+      const hot = hotRef.current?.hotInstance ?? undefined;
+      if (!hot) return;
+      const sourceData = hot.getSourceData();
+      const code = event.target.getAttribute('data-code') || '';
+      const value = event.target.getAttribute('data-name') || '';
+      const beforeValues = sourceData[row]?.[code]?.value as string[];
+      const nextValues = (() => {
+        // すでに値をもっているか
+        const exsitedValueIndex = beforeValues.findIndex((v) => v === value);
+        if (exsitedValueIndex < 0) {
+          if (event.target.checked) {
+            return [...beforeValues, value];
+          } else {
+            return [...beforeValues];
+          }
+        } else {
+          if (event.target.checked) {
+            return [...beforeValues];
+          } else {
+            return [...beforeValues.slice(0, exsitedValueIndex), ...beforeValues.slice(exsitedValueIndex + 1)];
+          }
+        }
+      })();
+
+      // TODO: 本体側と共通化
+      await client.bulkRequest({
+        requests: [
+          {
+            method: 'PUT',
+            api: '/k/v1/records.json',
+            payload: {
+              app: appId,
+              records:
+                sourceData[row]?.$id?.value != null
+                  ? [
+                      {
+                        id: sourceData[row].$id.value,
+                        record: {
+                          ...shapingRecord(excludeNonEditableFields(sourceData[row])),
+                          [code]: { value: nextValues },
+                        },
+                      },
+                    ]
+                  : [],
+            },
+          },
+          {
+            method: 'POST',
+            api: '/k/v1/records.json',
+            payload: {
+              app: appId,
+              records:
+                sourceData[row]?.$id?.value == null
+                  ? [{ ...shapingRecord(excludeNonEditableFields(sourceData[row])), [code]: { value: nextValues } }]
+                  : [],
+            },
+          },
+        ],
+      });
+      fetchAndLoadData();
+    },
+    [appId, fetchAndLoadData],
+  );
+  const fetchedAppDataState = useAsync(async (): Promise<{
+    columnData: {
+      colHeaders: any[];
+      columnDatas: Handsontable.ColumnSettings[];
+      dataSchema: Handsontable.RowObject;
+    };
+  }> => {
+    const columnData = await getColumnData(config, appId, onChangeCheckbox).catch((e) => {
+      throw new Error(t('errors.get_column_data_error') + ': ' + e.message);
+    });
+    return { columnData };
+  }, [appId, config, onChangeCheckbox, t]);
 
   useEffect(() => {
     if (!fetchedAppDataState.value) return;
@@ -242,12 +349,17 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
     data: [], // 繰り返しデータは取得するので初期値としてのデータはあたえない
     dataSchema: fetchedAppDataState.value?.columnData.dataSchema ?? {},
     hotRef: hotRef as React.MutableRefObject<HotTable>,
-    isLoading: fetchedAndLoadDataState.loading || afterChangeState.loading || beforeRemoveRowState.loading,
+    isLoading:
+      fetchedAndLoadDataState.loading ||
+      afterChangeState.loading ||
+      beforeRemoveRowState.loading ||
+      onChangeCheckboxState.loading,
     errorMessages:
       fetchedAppDataState.error?.message ||
       fetchedAndLoadDataState.error?.message ||
       afterChangeState.error?.message ||
       beforeRemoveRowState.error?.message ||
+      onChangeCheckboxState.error?.message ||
       '',
   };
 };
