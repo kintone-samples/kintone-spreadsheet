@@ -11,7 +11,7 @@ import { useTranslation } from 'react-i18next';
 import ReactDOM from 'react-dom';
 import { Config } from '~/src/js/config';
 import { client } from '~/src/js/utils/client';
-import { useRecursiveTimeout } from '~/src/js/utils/utils';
+import { useRecursiveTimeout } from '~/src/js/spreadsheet/hooks';
 import { Loader } from '~/src/js/spreadsheet/Loader';
 
 type SpreadSheetProps = {
