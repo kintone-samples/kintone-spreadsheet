@@ -11,7 +11,7 @@ import { useTranslation } from 'react-i18next';
 import ReactDOM from 'react-dom';
 import { Config } from '~/src/js/config';
 import { client } from '~/src/js/utils/client';
-import { useRecursiveTimeout } from '~/src/js/spreadsheet/hooks';
+import { useRecursiveTimeout, useFetchRecords } from '~/src/js/spreadsheet/hooks';
 import { Loader } from '~/src/js/spreadsheet/Loader';
 
 type SpreadSheetProps = {
@@ -182,12 +182,12 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
   const hotRef = useRef<HotTable>();
   const isPageVisible = usePageVisibility();
 
-  const [fetchedAndLoadDataState, fetchAndLoadData] = useAsyncFn(async (): Promise<void> => {
-    const hot = hotRef.current?.hotInstance ?? undefined;
-    if (!hot || !isPageVisible) return;
-    const { records } = await client.record.getRecords({ app: appId, query });
-    hot.loadData(records);
-  }, [appId, query, isPageVisible]);
+  const [fetchedAndLoadDataState, fetchAndLoadData] = useFetchRecords({
+    hotRef: hotRef as React.MutableRefObject<HotTable>,
+    isPageVisible,
+    query,
+    appId,
+  });
 
   // TODO: Hooksとして切り出す
   const [onChangeCheckboxState, onChangeCheckbox] = useAsyncFn(
