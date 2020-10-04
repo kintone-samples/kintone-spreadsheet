@@ -11,7 +11,7 @@ import { useTranslation } from 'react-i18next';
 import ReactDOM from 'react-dom';
 import { Config } from '~/src/js/config';
 import { client } from '~/src/js/utils/client';
-import { useRecursiveTimeout, useFetchRecords } from '~/src/js/spreadsheet/hooks';
+import { useRecursiveTimeout, useFetchRecords, useOnChangeCheckbox } from '~/src/js/spreadsheet/hooks';
 import { Loader } from '~/src/js/spreadsheet/Loader';
 
 type SpreadSheetProps = {
@@ -190,71 +190,11 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
   });
 
   // TODO: Hooksとして切り出す
-  const [onChangeCheckboxState, onChangeCheckbox] = useAsyncFn(
-    async (event: React.ChangeEvent<HTMLInputElement>, row: number) => {
-      const hot = hotRef.current?.hotInstance ?? undefined;
-      if (!hot) return;
-      const sourceData = hot.getSourceData();
-      const code = event.target.getAttribute('data-code') || '';
-      const value = event.target.getAttribute('data-name') || '';
-      const beforeValues = sourceData[row]?.[code]?.value as string[];
-      const nextValues = (() => {
-        // すでに値をもっているか
-        const exsitedValueIndex = beforeValues.findIndex((v) => v === value);
-        if (exsitedValueIndex < 0) {
-          if (event.target.checked) {
-            return [...beforeValues, value];
-          } else {
-            return [...beforeValues];
-          }
-        } else {
-          if (event.target.checked) {
-            return [...beforeValues];
-          } else {
-            return [...beforeValues.slice(0, exsitedValueIndex), ...beforeValues.slice(exsitedValueIndex + 1)];
-          }
-        }
-      })();
+  const [onChangeCheckboxState, onChangeCheckbox] = useOnChangeCheckbox({
+    appId,
+    hotRef: hotRef as React.MutableRefObject<HotTable>,
+  });
 
-      // TODO: 本体側と共通化
-      await client.bulkRequest({
-        requests: [
-          {
-            method: 'PUT',
-            api: '/k/v1/records.json',
-            payload: {
-              app: appId,
-              records:
-                sourceData[row]?.$id?.value != null
-                  ? [
-                      {
-                        id: sourceData[row].$id.value,
-                        record: {
-                          ...shapingRecord(excludeNonEditableFields(sourceData[row])),
-                          [code]: { value: nextValues },
-                        },
-                      },
-                    ]
-                  : [],
-            },
-          },
-          {
-            method: 'POST',
-            api: '/k/v1/records.json',
-            payload: {
-              app: appId,
-              records:
-                sourceData[row]?.$id?.value == null
-                  ? [{ ...shapingRecord(excludeNonEditableFields(sourceData[row])), [code]: { value: nextValues } }]
-                  : [],
-            },
-          },
-        ],
-      });
-      fetchAndLoadData();
-    },
-    [appId, fetchAndLoadData],
-  );
   const fetchedAppDataState = useAsync(async (): Promise<{
     columnData: {
       colHeaders: any[];
@@ -271,7 +211,7 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
   useEffect(() => {
     if (!fetchedAppDataState.value) return;
     fetchAndLoadData();
-  }, [fetchAndLoadData, fetchedAppDataState.value]);
+  }, [fetchAndLoadData, fetchedAppDataState.value, onChangeCheckboxState]);
 
   useRecursiveTimeout(
     async () => {
