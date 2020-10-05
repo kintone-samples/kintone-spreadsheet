@@ -11,7 +11,13 @@ import { useTranslation } from 'react-i18next';
 import ReactDOM from 'react-dom';
 import { Config } from '~/src/js/config';
 import { client } from '~/src/js/utils/client';
-import { useRecursiveTimeout, useFetchRecords, useOnChangeCheckbox, useAfterChange } from '~/src/js/spreadsheet/hooks';
+import {
+  useRecursiveTimeout,
+  useFetchRecords,
+  useOnChangeCheckbox,
+  useAfterChange,
+  useBeforeRemoveRow,
+} from '~/src/js/spreadsheet/hooks';
 import { Loader } from '~/src/js/spreadsheet/Loader';
 
 type SpreadSheetProps = {
@@ -212,6 +218,11 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
     hotRef: hotRef as React.MutableRefObject<HotTable>,
   });
 
+  const [beforeRemoveRowState, handleBeforeRemoveRow] = useBeforeRemoveRow({
+    appId,
+    hotRef: hotRef as React.MutableRefObject<HotTable>,
+  });
+
   // 初回ロード
   useEffect(() => {
     if (!fetchedAppDataState.value) return;
@@ -220,9 +231,9 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
 
   // 値変更後
   useEffect(() => {
-    if (!afterChangeState.value) return;
+    if (!afterChangeState.value && !beforeRemoveRowState.value) return;
     fetchAndLoadData();
-  }, [fetchAndLoadData, onChangeCheckboxState, afterChangeState.value]);
+  }, [fetchAndLoadData, onChangeCheckboxState, afterChangeState.value, beforeRemoveRowState.value]);
 
   useRecursiveTimeout(
     async () => {
@@ -230,18 +241,6 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
     },
     config.autoReloadInterval ? Number(config.autoReloadInterval) * 1000 : 10000,
   ); // デフォルト10秒ごとにリロード
-
-  const [beforeRemoveRowState, handleBeforeRemoveRow] = useAsyncFn(
-    async (index: number, amount: number) => {
-      const hot = hotRef.current?.hotInstance ?? undefined;
-      if (!hot) return;
-      const sourceData = hot.getSourceData();
-      const ids = sourceData.slice(index, index + amount).map((record) => record.$id.value);
-      await client.record.deleteRecords({ app: appId, ids });
-      fetchAndLoadData();
-    },
-    [appId, fetchAndLoadData],
-  );
 
   return {
     beforeRemoveRow: handleBeforeRemoveRow,

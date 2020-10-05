@@ -217,3 +217,22 @@ export const useAfterChange = ({
     [appId, hotRef],
   );
 };
+
+export const useBeforeRemoveRow = ({
+  hotRef,
+  appId,
+}: {
+  hotRef: React.RefObject<HotTable>;
+  appId: number;
+}): ReturnType<typeof useAsyncFn> => {
+  return useAsyncFn(
+    async (index: number, amount: number) => {
+      const hot = hotRef.current?.hotInstance ?? undefined;
+      if (!hot) return;
+      const sourceData = hot.getSourceData();
+      const ids = sourceData.slice(index, index + amount).map((record) => record.$id.value);
+      return await client.record.deleteRecords({ app: appId, ids });
+    },
+    [appId, hotRef],
+  );
+};
