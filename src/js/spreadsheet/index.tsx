@@ -11,7 +11,7 @@ import { useTranslation } from 'react-i18next';
 import ReactDOM from 'react-dom';
 import { Config } from '~/src/js/config';
 import { client } from '~/src/js/utils/client';
-import { useRecursiveTimeout, useFetchRecords, useOnChangeCheckbox } from '~/src/js/spreadsheet/hooks';
+import { useRecursiveTimeout, useFetchRecords, useOnChangeCheckbox, useAfterChange } from '~/src/js/spreadsheet/hooks';
 import { Loader } from '~/src/js/spreadsheet/Loader';
 
 type SpreadSheetProps = {
@@ -189,7 +189,6 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
     appId,
   });
 
-  // TODO: Hooksとして切り出す
   const [onChangeCheckboxState, onChangeCheckbox] = useOnChangeCheckbox({
     appId,
     hotRef: hotRef as React.MutableRefObject<HotTable>,
@@ -208,10 +207,22 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
     return { columnData };
   }, [appId, config, onChangeCheckbox, t]);
 
+  const [afterChangeState, handleSaveAfterChange] = useAfterChange({
+    appId,
+    hotRef: hotRef as React.MutableRefObject<HotTable>,
+  });
+
+  // 初回ロード
   useEffect(() => {
     if (!fetchedAppDataState.value) return;
     fetchAndLoadData();
-  }, [fetchAndLoadData, fetchedAppDataState.value, onChangeCheckboxState]);
+  }, [fetchAndLoadData, fetchedAppDataState.value]);
+
+  // 値変更後
+  useEffect(() => {
+    if (!afterChangeState.value) return;
+    fetchAndLoadData();
+  }, [fetchAndLoadData, onChangeCheckboxState, afterChangeState.value]);
 
   useRecursiveTimeout(
     async () => {
@@ -219,55 +230,6 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
     },
     config.autoReloadInterval ? Number(config.autoReloadInterval) * 1000 : 10000,
   ); // デフォルト10秒ごとにリロード
-
-  const [afterChangeState, handleSaveAfterChange] = useAsyncFn(
-    async (changes: Handsontable.CellChange[] | null, source: Handsontable.ChangeSource) => {
-      const hot = hotRef.current?.hotInstance ?? undefined;
-      if (!hot) return;
-
-      const sourceData = hot.getSourceData();
-
-      // データ読み込み時はイベントを終了
-      if (source === 'loadData' || !changes) return;
-
-      const changedRows = changes.map((row) => row[0]).filter((x, i, arr) => arr.indexOf(x) === i);
-
-      // FIXME: ここらへんはSourceData起点がいいかもしれない
-      const insertRecords = changedRows
-        .filter((row) => !sourceData[row]?.$id?.value)
-        .map((row) => shapingRecord(excludeNonEditableFields(sourceData[row])));
-
-      const updateRecords = changedRows
-        .filter((row) => sourceData[row]?.$id?.value)
-        .map((row) => ({
-          id: sourceData[row].$id.value,
-          record: shapingRecord(excludeNonEditableFields(sourceData[row])),
-        }));
-
-      await client.bulkRequest({
-        requests: [
-          {
-            method: 'PUT',
-            api: '/k/v1/records.json',
-            payload: {
-              app: appId,
-              records: updateRecords,
-            },
-          },
-          {
-            method: 'POST',
-            api: '/k/v1/records.json',
-            payload: {
-              app: appId,
-              records: insertRecords,
-            },
-          },
-        ],
-      });
-      fetchAndLoadData();
-    },
-    [appId, fetchAndLoadData],
-  );
 
   const [beforeRemoveRowState, handleBeforeRemoveRow] = useAsyncFn(
     async (index: number, amount: number) => {

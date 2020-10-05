@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import Handsontable from 'handsontable';
 import { useAsync, useAsyncFn } from 'react-use';
 import { HotTable } from '@handsontable/react';
 import { Record } from '@kintone/rest-api-client/lib/client/types';
@@ -88,7 +89,13 @@ export const useFetchRecords = ({
   }, [hotRef, appId, query, isPageVisible]);
 };
 
-export const useOnChangeCheckbox = ({ hotRef, appId }: { hotRef: React.RefObject<HotTable>; appId: number }) => {
+export const useOnChangeCheckbox = ({
+  hotRef,
+  appId,
+}: {
+  hotRef: React.RefObject<HotTable>;
+  appId: number;
+}): ReturnType<typeof useAsyncFn> => {
   return useAsyncFn(
     async (event: React.ChangeEvent<HTMLInputElement>, row: number) => {
       const hot = hotRef.current?.hotInstance ?? undefined;
@@ -146,6 +153,62 @@ export const useOnChangeCheckbox = ({ hotRef, appId }: { hotRef: React.RefObject
                 sourceData[row]?.$id?.value == null
                   ? [{ ...shapingRecord(excludeNonEditableFields(sourceData[row])), [code]: { value: nextValues } }]
                   : [],
+            },
+          },
+        ],
+      });
+    },
+    [appId, hotRef],
+  );
+};
+
+export const useAfterChange = ({
+  hotRef,
+  appId,
+}: {
+  hotRef: React.RefObject<HotTable>;
+  appId: number;
+}): ReturnType<typeof useAsyncFn> => {
+  return useAsyncFn(
+    async (changes: Handsontable.CellChange[] | null, source: Handsontable.ChangeSource) => {
+      const hot = hotRef.current?.hotInstance ?? undefined;
+      if (!hot) return;
+
+      const sourceData = hot.getSourceData();
+
+      // データ読み込み時はイベントを終了
+      if (source === 'loadData' || !changes) return;
+
+      const changedRows = changes.map((row) => row[0]).filter((x, i, arr) => arr.indexOf(x) === i);
+
+      // FIXME: ここらへんはSourceData起点がいいかもしれない
+      const insertRecords = changedRows
+        .filter((row) => !sourceData[row]?.$id?.value)
+        .map((row) => shapingRecord(excludeNonEditableFields(sourceData[row])));
+
+      const updateRecords = changedRows
+        .filter((row) => sourceData[row]?.$id?.value)
+        .map((row) => ({
+          id: sourceData[row].$id.value,
+          record: shapingRecord(excludeNonEditableFields(sourceData[row])),
+        }));
+
+      return client.bulkRequest({
+        requests: [
+          {
+            method: 'PUT',
+            api: '/k/v1/records.json',
+            payload: {
+              app: appId,
+              records: updateRecords,
+            },
+          },
+          {
+            method: 'POST',
+            api: '/k/v1/records.json',
+            payload: {
+              app: appId,
+              records: insertRecords,
             },
           },
         ],
