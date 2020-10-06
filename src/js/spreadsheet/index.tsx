@@ -80,17 +80,6 @@ declare type CheckBoxFieldProperty = {
   align: 'HORIZONTAL' | 'VERTICAL';
 };
 
-const excludeNonEditableFields = (record: Record) =>
-  Object.fromEntries(Object.entries(record).filter(([, v]) => NOT_ALLOWED_EDIT_FIELDS.indexOf(v.type) === -1));
-
-const shapingRecord = (record: Record) =>
-  Object.fromEntries(
-    Object.entries(record).map(([k, v]) => [
-      k,
-      { ...v, value: v.type === 'NUMBER' ? v.value.replace(/[^0-9]/g, '') : v.value },
-    ]),
-  );
-
 const getColumnData = async (config: Config, appId: number, onChange: any) => {
   const resp = await client.app.getFormFields({ app: appId });
   // ヘッダーの取得
