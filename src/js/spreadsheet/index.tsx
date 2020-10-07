@@ -11,7 +11,13 @@ import { useTranslation } from 'react-i18next';
 import ReactDOM from 'react-dom';
 import { Config } from '~/src/js/config';
 import { client } from '~/src/js/utils/client';
-import { useRecursiveTimeout } from '~/src/js/utils/utils';
+import {
+  useRecursiveTimeout,
+  useFetchRecords,
+  useOnChangeCheckbox,
+  useAfterChange,
+  useBeforeRemoveRow,
+} from '~/src/js/spreadsheet/hooks';
 import { Loader } from '~/src/js/spreadsheet/Loader';
 
 type SpreadSheetProps = {
@@ -73,17 +79,6 @@ declare type CheckBoxFieldProperty = {
   options: Options;
   align: 'HORIZONTAL' | 'VERTICAL';
 };
-
-const excludeNonEditableFields = (record: Record) =>
-  Object.fromEntries(Object.entries(record).filter(([, v]) => NOT_ALLOWED_EDIT_FIELDS.indexOf(v.type) === -1));
-
-const shapingRecord = (record: Record) =>
-  Object.fromEntries(
-    Object.entries(record).map(([k, v]) => [
-      k,
-      { ...v, value: v.type === 'NUMBER' ? v.value.replace(/[^0-9]/g, '') : v.value },
-    ]),
-  );
 
 const getColumnData = async (config: Config, appId: number, onChange: any) => {
   const resp = await client.app.getFormFields({ app: appId });
@@ -182,79 +177,18 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
   const hotRef = useRef<HotTable>();
   const isPageVisible = usePageVisibility();
 
-  const [fetchedAndLoadDataState, fetchAndLoadData] = useAsyncFn(async (): Promise<void> => {
-    const hot = hotRef.current?.hotInstance ?? undefined;
-    if (!hot || !isPageVisible) return;
-    const { records } = await client.record.getRecords({ app: appId, query });
-    hot.loadData(records);
-  }, [appId, query, isPageVisible]);
+  const [fetchedAndLoadDataState, fetchAndLoadData] = useFetchRecords({
+    hotRef: hotRef as React.MutableRefObject<HotTable>,
+    isPageVisible,
+    query,
+    appId,
+  });
 
-  // TODO: Hooksとして切り出す
-  const [onChangeCheckboxState, onChangeCheckbox] = useAsyncFn(
-    async (event: React.ChangeEvent<HTMLInputElement>, row: number) => {
-      const hot = hotRef.current?.hotInstance ?? undefined;
-      if (!hot) return;
-      const sourceData = hot.getSourceData();
-      const code = event.target.getAttribute('data-code') || '';
-      const value = event.target.getAttribute('data-name') || '';
-      const beforeValues = sourceData[row]?.[code]?.value as string[];
-      const nextValues = (() => {
-        // すでに値をもっているか
-        const exsitedValueIndex = beforeValues.findIndex((v) => v === value);
-        if (exsitedValueIndex < 0) {
-          if (event.target.checked) {
-            return [...beforeValues, value];
-          } else {
-            return [...beforeValues];
-          }
-        } else {
-          if (event.target.checked) {
-            return [...beforeValues];
-          } else {
-            return [...beforeValues.slice(0, exsitedValueIndex), ...beforeValues.slice(exsitedValueIndex + 1)];
-          }
-        }
-      })();
+  const [onChangeCheckboxState, onChangeCheckbox] = useOnChangeCheckbox({
+    appId,
+    hotRef: hotRef as React.MutableRefObject<HotTable>,
+  });
 
-      // TODO: 本体側と共通化
-      await client.bulkRequest({
-        requests: [
-          {
-            method: 'PUT',
-            api: '/k/v1/records.json',
-            payload: {
-              app: appId,
-              records:
-                sourceData[row]?.$id?.value != null
-                  ? [
-                      {
-                        id: sourceData[row].$id.value,
-                        record: {
-                          ...shapingRecord(excludeNonEditableFields(sourceData[row])),
-                          [code]: { value: nextValues },
-                        },
-                      },
-                    ]
-                  : [],
-            },
-          },
-          {
-            method: 'POST',
-            api: '/k/v1/records.json',
-            payload: {
-              app: appId,
-              records:
-                sourceData[row]?.$id?.value == null
-                  ? [{ ...shapingRecord(excludeNonEditableFields(sourceData[row])), [code]: { value: nextValues } }]
-                  : [],
-            },
-          },
-        ],
-      });
-      fetchAndLoadData();
-    },
-    [appId, fetchAndLoadData],
-  );
   const fetchedAppDataState = useAsync(async (): Promise<{
     columnData: {
       colHeaders: any[];
@@ -268,10 +202,27 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
     return { columnData };
   }, [appId, config, onChangeCheckbox, t]);
 
+  const [afterChangeState, handleSaveAfterChange] = useAfterChange({
+    appId,
+    hotRef: hotRef as React.MutableRefObject<HotTable>,
+  });
+
+  const [beforeRemoveRowState, handleBeforeRemoveRow] = useBeforeRemoveRow({
+    appId,
+    hotRef: hotRef as React.MutableRefObject<HotTable>,
+  });
+
+  // 初回ロード
   useEffect(() => {
     if (!fetchedAppDataState.value) return;
     fetchAndLoadData();
   }, [fetchAndLoadData, fetchedAppDataState.value]);
+
+  // 値変更後
+  useEffect(() => {
+    if (!afterChangeState.value && !beforeRemoveRowState.value) return;
+    fetchAndLoadData();
+  }, [fetchAndLoadData, onChangeCheckboxState, afterChangeState.value, beforeRemoveRowState.value]);
 
   useRecursiveTimeout(
     async () => {
@@ -279,67 +230,6 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
     },
     config.autoReloadInterval ? Number(config.autoReloadInterval) * 1000 : 10000,
   ); // デフォルト10秒ごとにリロード
-
-  const [afterChangeState, handleSaveAfterChange] = useAsyncFn(
-    async (changes: Handsontable.CellChange[] | null, source: Handsontable.ChangeSource) => {
-      const hot = hotRef.current?.hotInstance ?? undefined;
-      if (!hot) return;
-
-      const sourceData = hot.getSourceData();
-
-      // データ読み込み時はイベントを終了
-      if (source === 'loadData' || !changes) return;
-
-      const changedRows = changes.map((row) => row[0]).filter((x, i, arr) => arr.indexOf(x) === i);
-
-      // FIXME: ここらへんはSourceData起点がいいかもしれない
-      const insertRecords = changedRows
-        .filter((row) => !sourceData[row]?.$id?.value)
-        .map((row) => shapingRecord(excludeNonEditableFields(sourceData[row])));
-
-      const updateRecords = changedRows
-        .filter((row) => sourceData[row]?.$id?.value)
-        .map((row) => ({
-          id: sourceData[row].$id.value,
-          record: shapingRecord(excludeNonEditableFields(sourceData[row])),
-        }));
-
-      await client.bulkRequest({
-        requests: [
-          {
-            method: 'PUT',
-            api: '/k/v1/records.json',
-            payload: {
-              app: appId,
-              records: updateRecords,
-            },
-          },
-          {
-            method: 'POST',
-            api: '/k/v1/records.json',
-            payload: {
-              app: appId,
-              records: insertRecords,
-            },
-          },
-        ],
-      });
-      fetchAndLoadData();
-    },
-    [appId, fetchAndLoadData],
-  );
-
-  const [beforeRemoveRowState, handleBeforeRemoveRow] = useAsyncFn(
-    async (index: number, amount: number) => {
-      const hot = hotRef.current?.hotInstance ?? undefined;
-      if (!hot) return;
-      const sourceData = hot.getSourceData();
-      const ids = sourceData.slice(index, index + amount).map((record) => record.$id.value);
-      await client.record.deleteRecords({ app: appId, ids });
-      fetchAndLoadData();
-    },
-    [appId, fetchAndLoadData],
-  );
 
   return {
     beforeRemoveRow: handleBeforeRemoveRow,
