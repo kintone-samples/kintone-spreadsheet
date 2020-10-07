@@ -425,10 +425,10 @@
     bessel "^1.0.2"
     jstat "^1.9.2"
 
-"@handsontable/react@^3.1.3":
-  version "3.1.3"
-  resolved "https://registry.yarnpkg.com/@handsontable/react/-/react-3.1.3.tgz#382ff655c17469bd587010e50281f0f47c3c0e79"
-  integrity sha512-XuLP0rmpkXAi55kmw1YtK1Icn2gtkHe0xT99inNgLiGGFMnv3ll1Y8NCfwHqSp0EMnpwpbO6wbN+ZBE/huwPwA==
+"@handsontable/react@^4.0.0":
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/@handsontable/react/-/react-4.0.0.tgz#484423752d21d1313af5fed7cad6fef5e02ea676"
+  integrity sha512-c1HXvdmpKAhy/JoEYEDJSo+6NveQjMgYwBCr8RmhFj2Yo2y71PLK7zNVzKUzebleUDd1oMIbHFNgkpjL3hfT2A==
 
 "@istanbuljs/load-nyc-config@^1.0.0":
   version "1.1.0"
