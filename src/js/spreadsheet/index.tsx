@@ -113,6 +113,10 @@ const getColumnData = async (config: Config, appId: number, onChange: any) => {
       columnData.renderer = checkboxRenderer(resp.properties[code] as CheckBoxFieldProperty, onChange);
     }
 
+    if (resp.properties[code].type === 'DATETIME') {
+      columnData.renderer = datetimeRenderer;
+    }
+
     // set read only
     if (NOT_ALLOWED_EDIT_FIELDS.indexOf(resp.properties[code].type) !== -1) {
       columnData.readOnly = true;
@@ -165,6 +169,11 @@ const checkboxRenderer = (
     );
   };
   ReactDOM.render(<Dom />, td);
+  return td;
+};
+
+const datetimeRenderer: Handsontable.renderers.Base = (instance, td, row, col, prop, value) => {
+  if (!value) return td;
   return td;
 };
 
