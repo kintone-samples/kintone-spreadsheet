@@ -56,6 +56,12 @@ const useFormFieldSelectTable = (
 ) => {
   const [appFields, setAppfields] = useState<FormField[]>([]);
   const [selectedFields, setSelectedFields] = useState<FormField[]>(defaultSelectedFields);
+  useEffect(() => {
+    // reset initial value when no default selected fields
+    if (defaultSelectedFields.length === 0 && appFields.length > 0) {
+      setSelectedFields([{ code: appFields[0].code }]);
+    }
+  }, [appFields, defaultSelectedFields.length]);
   const onChangeSelect = useCallback(
     (event: SyntheticEvent<HTMLSelectElement>, index: number) => {
       const value = event.currentTarget.value;
