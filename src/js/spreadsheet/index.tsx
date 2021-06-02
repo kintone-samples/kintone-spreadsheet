@@ -1,10 +1,9 @@
-import React, { useEffect, useRef, useMemo } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { usePageVisibility } from 'react-page-visibility';
 import Handsontable from 'handsontable';
 import { HotTable } from '@handsontable/react';
 import 'handsontable/dist/handsontable.full.css';
-import { useAsync, useAsyncFn } from 'react-use';
-import { Record } from '@kintone/rest-api-client/lib/client/types';
+import { useAsync } from 'react-use';
 import styled from '@emotion/styled';
 import { Alert } from '@kintone/kintone-ui-component';
 import { useTranslation } from 'react-i18next';
@@ -21,8 +20,8 @@ import {
 import { Loader } from '~/src/js/spreadsheet/Loader';
 
 type SpreadSheetProps = {
-  saveAfterChange: Handsontable.Hooks.Events['afterChange'];
-  beforeRemoveRow: Handsontable.Hooks.Events['beforeRemoveRow'];
+  saveAfterChange: Handsontable.Hooks['afterChange'];
+  beforeRemoveRow: Handsontable.Hooks['beforeRemoveRow'];
   colHeaders: Handsontable.GridSettings['colHeaders'];
   columns: Handsontable.GridSettings['columns'];
   dataSchema: Handsontable.GridSettings['dataSchema'];
@@ -88,8 +87,8 @@ const getColumnData = async (config: Config, appId: number, onChange: any) => {
   });
 
   // 各セルの設定
-  const columnDatas: Handsontable.ColumnSettings[] = config.columns.map(({ code }) => {
-    const columnData: Handsontable.ColumnSettings = { data: `${code}.value` };
+  const columnDatas: Handsontable.GridSettings['columns'] = config.columns.map(({ code }) => {
+    const columnData: Handsontable.GridSettings = { data: `${code}.value` };
 
     // if type is DROP_DOWN, add type and source property
     if (resp.properties[code].type === 'DROP_DOWN' || resp.properties[code].type === 'RADIO_BUTTON') {
@@ -121,7 +120,8 @@ const getColumnData = async (config: Config, appId: number, onChange: any) => {
   });
 
   // データスキーマの作成
-  const dataSchema: Handsontable.RowObject = config.columns.reduce((prev, { code }) => {
+  // const dataSchema: Handsontable.RowObject = config.columns.reduce((prev, { code }) => {
+  const dataSchema = config.columns.reduce((prev, { code }) => {
     return {
       ...prev,
       [code]: { type: resp.properties[code].type, value: (resp.properties[code] as any).defaultValue },
@@ -192,8 +192,8 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
   const fetchedAppDataState = useAsync(async (): Promise<{
     columnData: {
       colHeaders: any[];
-      columnDatas: Handsontable.ColumnSettings[];
-      dataSchema: Handsontable.RowObject;
+      columnDatas: Handsontable.GridSettings['columns'];
+      dataSchema: Handsontable.GridSettings['data'];
     };
   }> => {
     const columnData = await getColumnData(config, appId, onChangeCheckbox).catch((e) => {
@@ -262,8 +262,8 @@ const MemoedHotTable = React.memo<SpreadSheetProps>(
       rowHeaders
       contextMenu={['remove_row']}
       minSpareRows={1}
-      width="100%"
-      height="100vh"
+      // width="100%"
+      // height="100vh"
       colHeaders={colHeaders}
       columns={columns}
       dataSchema={dataSchema}
