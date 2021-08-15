@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { usePageVisibility } from 'react-page-visibility';
 import Handsontable from 'handsontable';
-import { HotTable } from '@handsontable/react';
 import 'handsontable/dist/handsontable.full.css';
 import { useAsync } from 'react-use';
 import styled from '@emotion/styled';
@@ -18,6 +17,10 @@ import {
   useBeforeRemoveRow,
 } from '~/src/js/spreadsheet/hooks';
 import { Loader } from '~/src/js/spreadsheet/Loader';
+
+type HotTable = HTMLDivElement & {
+  hotInstance?: Handsontable;
+};
 
 type SpreadSheetProps = {
   saveAfterChange: Handsontable.Hooks['afterChange'];
@@ -255,22 +258,39 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
 };
 
 const MemoedHotTable = React.memo<SpreadSheetProps>(
-  ({ hotRef, beforeRemoveRow, saveAfterChange, colHeaders, columns, dataSchema, data }) => (
-    <HotTable
-      ref={hotRef}
-      data={data}
-      rowHeaders
-      contextMenu={['remove_row']}
-      minSpareRows={1}
-      // width="100%"
-      // height="100vh"
-      colHeaders={colHeaders}
-      columns={columns}
-      dataSchema={dataSchema}
-      afterChange={saveAfterChange}
-      beforeRemoveRow={beforeRemoveRow}
-    />
-  ),
+  // https://github.com/handsontable/handsontable/blob/master/wrappers/react/src/hotTable.tsx
+  // 上記をうまく使えばローコストでいけるかも？
+  ({ hotRef, beforeRemoveRow, saveAfterChange, colHeaders, columns, dataSchema, data }) => {
+    // callback refを仕込む必要がある
+    // https://ryotarch.com/javascript/react/custom-hooks-ref-callback/
+    const Comonent = <div ref={hotRef}></div>;
+    new Handsontable(hotRef.current, {
+      data: data,
+      rowHeaders: true,
+      contextMenu: ['remove_row'],
+      minSpareRows: 1,
+      colHeaders: colHeaders,
+      columns: columns,
+      dataSchema: dataSchema,
+      afterChange: saveAfterChange,
+      beforeRemoveRow: beforeRemoveRow,
+    });
+    return Comonent;
+    // return (
+    //   <HotTable
+    //     ref={hotRef}
+    //     data={data}
+    //     rowHeaders
+    //     contextMenu={['remove_row']}
+    //     minSpareRows={1}
+    //     colHeaders={colHeaders}
+    //     columns={columns}
+    //     dataSchema={dataSchema}
+    //     afterChange={saveAfterChange}
+    //     beforeRemoveRow={beforeRemoveRow}
+    //   />
+    // );
+  },
   (prev, next) => prev.hotRef === next.hotRef && prev.columns?.length === next.columns?.length,
 );
 
