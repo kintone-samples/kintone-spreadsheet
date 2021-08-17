@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import { usePageVisibility } from 'react-page-visibility';
 import Handsontable from 'handsontable';
 import 'handsontable/dist/handsontable.full.css';
@@ -30,6 +30,7 @@ type SpreadSheetProps = {
   dataSchema: Handsontable.GridSettings['dataSchema'];
   data: Handsontable.GridSettings['data'];
   hotRef: React.RefObject<HotTable>;
+  setHotRef: (node: HotTable) => void;
 };
 
 type Props = {
@@ -80,6 +81,18 @@ declare type CheckBoxFieldProperty = {
   defaultValue: string[];
   options: Options;
   align: 'HORIZONTAL' | 'VERTICAL';
+};
+
+export const useHookWithRefCallback = <T extends HTMLElement>(): [
+  React.MutableRefObject<T | null>,
+  (node: T) => void,
+] => {
+  const ref = useRef<T | null>(null);
+  const setRef = useCallback((node: T) => {
+    ref.current = node;
+  }, []);
+
+  return [ref, setRef];
 };
 
 const getColumnData = async (config: Config, appId: number, onChange: any) => {
@@ -177,7 +190,8 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
     i18n.changeLanguage(kintone.getLoginUser().language);
   }, [i18n]);
 
-  const hotRef = useRef<HotTable>();
+  // const hotRef = useRef<HotTable>();
+  const [hotRef, setHotRef] = useHookWithRefCallback<HotTable>();
   const isPageVisible = usePageVisibility();
 
   const [fetchedAndLoadDataState, fetchAndLoadData] = useFetchRecords({
@@ -242,6 +256,7 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
     data: [], // 繰り返しデータは取得するので初期値としてのデータはあたえない
     dataSchema: fetchedAppDataState.value?.columnData.dataSchema ?? {},
     hotRef: hotRef as React.MutableRefObject<HotTable>,
+    setHotRef: setHotRef,
     isLoading:
       fetchedAndLoadDataState.loading ||
       afterChangeState.loading ||
@@ -260,36 +275,26 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
 const MemoedHotTable = React.memo<SpreadSheetProps>(
   // https://github.com/handsontable/handsontable/blob/master/wrappers/react/src/hotTable.tsx
   // 上記をうまく使えばローコストでいけるかも？
-  ({ hotRef, beforeRemoveRow, saveAfterChange, colHeaders, columns, dataSchema, data }) => {
+  ({ setHotRef, hotRef, beforeRemoveRow, saveAfterChange, colHeaders, columns, dataSchema, data }) => {
     // callback refを仕込む必要がある
     // https://ryotarch.com/javascript/react/custom-hooks-ref-callback/
-    const Comonent = <div ref={hotRef}></div>;
-    new Handsontable(hotRef.current, {
-      data: data,
-      rowHeaders: true,
-      contextMenu: ['remove_row'],
-      minSpareRows: 1,
-      colHeaders: colHeaders,
-      columns: columns,
-      dataSchema: dataSchema,
-      afterChange: saveAfterChange,
-      beforeRemoveRow: beforeRemoveRow,
-    });
-    return Comonent;
-    // return (
-    //   <HotTable
-    //     ref={hotRef}
-    //     data={data}
-    //     rowHeaders
-    //     contextMenu={['remove_row']}
-    //     minSpareRows={1}
-    //     colHeaders={colHeaders}
-    //     columns={columns}
-    //     dataSchema={dataSchema}
-    //     afterChange={saveAfterChange}
-    //     beforeRemoveRow={beforeRemoveRow}
-    //   />
-    // );
+    if (hotRef.current) {
+      new Handsontable(hotRef.current, {
+        data: data,
+        rowHeaders: true,
+        contextMenu: ['remove_row'],
+        minSpareRows: 1,
+        colHeaders: colHeaders,
+        columns: columns,
+        dataSchema: dataSchema,
+        afterChange: saveAfterChange,
+        beforeRemoveRow: beforeRemoveRow,
+      });
+    }
+    // エラーがでるのでこれで確認
+    // eslint-disable-next-line max-len
+    // https://stackoverflow.com/questions/62336340/cannot-update-a-component-while-rendering-a-different-component-warning
+    return <div ref={setHotRef}></div>;
   },
   (prev, next) => prev.hotRef === next.hotRef && prev.columns?.length === next.columns?.length,
 );
@@ -310,6 +315,7 @@ export const SpreadSheet: React.FC<Props> = ({
   data,
   isLoading,
   errorMessages,
+  setHotRef,
 }) => {
   return (
     <Wrapper>
@@ -317,6 +323,7 @@ export const SpreadSheet: React.FC<Props> = ({
       {isLoading && <Loader />}
       <MemoedHotTable
         hotRef={hotRef}
+        setHotRef={setHotRef}
         data={data}
         colHeaders={colHeaders}
         columns={columns}
