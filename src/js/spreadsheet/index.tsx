@@ -38,16 +38,6 @@ type Props = {
   errorMessages: string;
 } & SpreadSheetProps;
 
-const ARRAY_FIELDS = [
-  'CHECK_BOX',
-  'MULTI_SELECT',
-  'FILE',
-  'USER_SELECT',
-  'CATEGORY',
-  'SUBTABLE',
-  'ORGANIZATION_SELECT',
-  'GROUP_SELECT',
-];
 const NOT_ALLOWED_EDIT_FIELDS = [
   'RECORD_NUMBER',
   'CREATED_TIME',
@@ -273,13 +263,9 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
 };
 
 const MemoedHotTable = React.memo<SpreadSheetProps>(
-  // https://github.com/handsontable/handsontable/blob/master/wrappers/react/src/hotTable.tsx
-  // 上記をうまく使えばローコストでいけるかも？
   ({ setHotRef, hotRef, beforeRemoveRow, saveAfterChange, colHeaders, columns, dataSchema, data }) => {
-    // callback refを仕込む必要がある
-    // https://ryotarch.com/javascript/react/custom-hooks-ref-callback/
     if (hotRef.current) {
-      new Handsontable(hotRef.current, {
+      hotRef.current.hotInstance = new Handsontable(hotRef.current, {
         data: data,
         rowHeaders: true,
         contextMenu: ['remove_row'],
@@ -291,9 +277,6 @@ const MemoedHotTable = React.memo<SpreadSheetProps>(
         beforeRemoveRow: beforeRemoveRow,
       });
     }
-    // エラーがでるのでこれで確認
-    // eslint-disable-next-line max-len
-    // https://stackoverflow.com/questions/62336340/cannot-update-a-component-while-rendering-a-different-component-warning
     return <div ref={setHotRef}></div>;
   },
   (prev, next) => prev.hotRef === next.hotRef && prev.columns?.length === next.columns?.length,
