@@ -20,7 +20,7 @@ const config: Configuration = {
     },
   },
   plugins: [
-    new BundleAnalyzerPlugin(),
+    // new BundleAnalyzerPlugin(),
     {
       // code will be packaged and uploaded automatically only watch mode
       apply: (compiler) => {

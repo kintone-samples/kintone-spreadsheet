@@ -1,9 +1,12 @@
 import { useEffect, useRef } from 'react';
 import Handsontable from 'handsontable';
-import { useAsync, useAsyncFn } from 'react-use';
-import { HotTable } from '@handsontable/react';
+import { useAsyncFn } from 'react-use';
 import { Record } from '@kintone/rest-api-client/lib/client/types';
 import { client } from '~/src/js/utils/client';
+
+type HotTable = HTMLDivElement & {
+  hotInstance?: Handsontable;
+};
 
 const NOT_ALLOWED_EDIT_FIELDS = [
   'RECORD_NUMBER',
