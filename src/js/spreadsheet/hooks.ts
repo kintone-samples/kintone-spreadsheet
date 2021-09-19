@@ -30,7 +30,7 @@ const shapingRecord = (record: Record) =>
   Object.fromEntries(
     Object.entries(record).map(([k, v]) => [
       k,
-      { ...v, value: v.type === 'NUMBER' ? v.value.replace(/[^0-9]/g, '') : v.value },
+      { ...v, value: v.type === 'NUMBER' ? v.value.replace(/[^0-9|.]/g, '') : v.value },
     ]),
   );
 

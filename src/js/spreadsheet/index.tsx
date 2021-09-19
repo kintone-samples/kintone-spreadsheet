@@ -180,7 +180,6 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
     i18n.changeLanguage(kintone.getLoginUser().language);
   }, [i18n]);
 
-  // const hotRef = useRef<HotTable>();
   const [hotRef, setHotRef] = useHookWithRefCallback<HotTable>();
   const isPageVisible = usePageVisibility();
 
