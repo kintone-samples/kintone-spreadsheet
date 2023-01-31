@@ -62,3 +62,7 @@ If you want to extend or change the plugin itself, follow the procedure below.
 ## License
 
 MIT
+
+## Copyright
+
+Copyright(c) Cybozu, Inc.
