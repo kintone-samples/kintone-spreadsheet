@@ -67,3 +67,7 @@
 ## License
 
 MIT
+
+## Copyright
+
+Copyright(c) Cybozu, Inc.

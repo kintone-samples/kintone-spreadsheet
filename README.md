@@ -67,3 +67,7 @@ kintone の一覧画面を Excel のようなスプレッドシートの見た�
 ## License
 
 MIT
+
+## Copyright
+
+Copyright(c) Cybozu, Inc.
