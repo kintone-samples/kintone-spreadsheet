@@ -4,3 +4,4 @@ dist
 plugin.zip
 yarn-error.log
 .env
+.DS_Store
