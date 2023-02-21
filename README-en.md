@@ -47,10 +47,6 @@ If you want to extend or change the plugin itself, follow the procedure below.
 
 `yarn run watch`
 
-### Testing
-
-`yarn test`
-
 ## Author
 
 [@mura-](https://www.facebook.com/kazuki.murahama)
