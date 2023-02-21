@@ -51,11 +51,6 @@
 每更改一次文件都需要逐一编译。  
 `yarn run dev`
 
-### 测试的实施情况
-
-当前仅对效用函数进行了测试。  
-`yarn test`
-
 ## Author
 
 [@mura-](https://www.facebook.com/kazuki.murahama)
