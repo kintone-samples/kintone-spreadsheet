@@ -1,6 +1,6 @@
 {
   "manifest_version": 1,
-  "version": 1,
+  "version": "1.0.1",
   "type": "APP",
   "name": {
     "ja": "kintone spreadsheet editor",
@@ -12,10 +12,14 @@
   },
   "icon": "image/icon.png",
   "desktop": {
-    "js": ["dist/main.bundle.js"]
+    "js": [
+      "dist/main.bundle.js"
+    ]
   },
   "config": {
     "html": "html/config.html",
-    "js": ["dist/config.bundle.js"]
+    "js": [
+      "dist/config.bundle.js"
+    ]
   }
 }
