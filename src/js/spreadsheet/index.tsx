@@ -263,19 +263,22 @@ export const useSpreadSheet = ({ config, query, appId }: { config: Config; query
 
 const MemoedHotTable = React.memo<SpreadSheetProps>(
   ({ setHotRef, hotRef, beforeRemoveRow, saveAfterChange, colHeaders, columns, dataSchema, data }) => {
-    if (hotRef.current) {
-      hotRef.current.hotInstance = new Handsontable(hotRef.current, {
-        data: data,
-        rowHeaders: true,
-        contextMenu: ['remove_row'],
-        minSpareRows: 1,
-        colHeaders: colHeaders,
-        columns: columns,
-        dataSchema: dataSchema,
-        afterChange: saveAfterChange,
-        beforeRemoveRow: beforeRemoveRow,
-      });
-    }
+    useEffect(() => {
+      if (hotRef.current) {
+        hotRef.current.hotInstance = new Handsontable(hotRef.current, {
+          data: data,
+          rowHeaders: true,
+          contextMenu: ['remove_row'],
+          minSpareRows: 1,
+          colHeaders: colHeaders,
+          columns: columns,
+          dataSchema: dataSchema,
+          afterChange: saveAfterChange,
+          beforeRemoveRow: beforeRemoveRow,
+        });
+      }
+    }),
+      [setHotRef, hotRef, beforeRemoveRow, saveAfterChange, colHeaders, columns, dataSchema, data];
     return <div ref={setHotRef}></div>;
   },
   (prev, next) => prev.hotRef === next.hotRef && prev.columns?.length === next.columns?.length,
