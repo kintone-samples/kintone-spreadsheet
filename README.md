@@ -51,11 +51,6 @@ kintone の一覧画面を Excel のようなスプレッドシートの見た�
 ファイルを変更する度に逐一ビルドします。  
 `yarn run dev`
 
-### テスト実行
-
-今のところはユーティリティ関数のみテストしています。  
-`yarn test`
-
 ## Author
 
 [@mura-](https://www.facebook.com/kazuki.murahama)
