@@ -18,17 +18,18 @@
     "printWidth": 120
   },
   "dependencies": {
-    "@emotion/core": "^10.0.35",
-    "@emotion/styled": "^10.0.27",
+    "@emotion/core": "^11.0.0",
+    "@emotion/react": "^11.10.6",
+    "@emotion/styled": "^11.10.6",
     "@kintone/kintone-ui-component": "^0.7.2",
-    "@kintone/rest-api-client": "^1.4.1",
+    "@kintone/rest-api-client": "^3.3.3",
     "handsontable": "6.2.2",
-    "i18next": "^19.4.5",
-    "react": "^16.13.1",
-    "react-dom": "^16.13.1",
-    "react-i18next": "^11.6.0",
-    "react-page-visibility": "^6.2.0",
-    "react-use": "^15.3.3"
+    "i18next": "^22.4.11",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-i18next": "^12.2.0",
+    "react-page-visibility": "^7.0.0",
+    "react-use": "^17.4.0"
   },
   "devDependencies": {
     "@babel/core": "7.21.0",
