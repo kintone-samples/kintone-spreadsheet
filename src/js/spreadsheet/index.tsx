@@ -144,35 +144,37 @@ const userSelectRenderer: Handsontable.renderers.Base = (instance, td, row, col,
   return td;
 };
 
-const checkboxRenderer = (
-  property: CheckBoxFieldProperty,
-  onChange: (event: React.ChangeEvent<HTMLInputElement>, row: number) => void,
-): Handsontable.renderers.Checkbox => (instance, td, row, col, prop, value) => {
-  // Experimental
-  // eslint-disable-next-line max-len
-  // https://codesandbox.io/s/advanced-handsontablereact-implementation-using-hotcolumn-878mz?from-embed=&file=/src/index.js
+const checkboxRenderer =
+  (
+    property: CheckBoxFieldProperty,
+    onChange: (event: React.ChangeEvent<HTMLInputElement>, row: number) => void,
+  ): Handsontable.renderers.Checkbox =>
+  (instance, td, row, col, prop, value) => {
+    // Experimental
+    // eslint-disable-next-line max-len
+    // https://codesandbox.io/s/advanced-handsontablereact-implementation-using-hotcolumn-878mz?from-embed=&file=/src/index.js
 
-  const Dom = () => {
-    return (
-      <div>
-        {Object.values(property.options).map((v, i) => (
-          <label key={i}>
-            <input
-              type="checkbox"
-              defaultChecked={value.includes(v.label)}
-              onChange={(event) => onChange(event, row)}
-              data-name={v.label}
-              data-code={property.code}
-            />
-            {v.label}
-          </label>
-        ))}
-      </div>
-    );
+    const Dom = () => {
+      return (
+        <div>
+          {Object.values(property.options).map((v, i) => (
+            <label key={i}>
+              <input
+                type="checkbox"
+                defaultChecked={value.includes(v.label)}
+                onChange={(event) => onChange(event, row)}
+                data-name={v.label}
+                data-code={property.code}
+              />
+              {v.label}
+            </label>
+          ))}
+        </div>
+      );
+    };
+    ReactDOM.render(<Dom />, td);
+    return td;
   };
-  ReactDOM.render(<Dom />, td);
-  return td;
-};
 
 export const useSpreadSheet = ({ config, query, appId }: { config: Config; query: string; appId: number }): Props => {
   const { t, i18n } = useTranslation();
