@@ -8,7 +8,7 @@ const DEBUG = process.env.NODE_ENV !== 'production';
 
 const config: Configuration = {
   mode: DEBUG ? 'development' : 'production',
-  devtool: DEBUG ? 'cheap-module-eval-source-map' : undefined,
+  devtool: DEBUG ? 'eval-cheap-module-source-map' : undefined,
   entry: {
     main: './src/index.tsx',
     config: './src/js/config/index.tsx',
@@ -40,7 +40,6 @@ const config: Configuration = {
       new TerserPlugin({
         terserOptions: {
           compress: {
-            warnings: false,
             unused: true,
             dead_code: true,
             drop_console: true,

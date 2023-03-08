@@ -1,15 +1,17 @@
 {
   "extends": [
     "eslint:recommended",
-    "plugin:jest/recommended",
     "plugin:react/recommended",
     "plugin:@typescript-eslint/recommended",
     "plugin:import/typescript",
-    "prettier/@typescript-eslint",
-    "prettier/react",
     "plugin:prettier/recommended"
   ],
-  "plugins": ["@typescript-eslint", "react", "import", "jest", "react-hooks"],
+  "plugins": [
+    "@typescript-eslint",
+    "react",
+    "import",
+    "react-hooks"
+  ],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "sourceType": "module",
@@ -31,14 +33,41 @@
         "ignoreRestSiblings": false
       }
     ],
-    "curly": ["error", "multi-line"],
-    "react/jsx-boolean-value": ["error", "never"],
+    "curly": [
+      "error",
+      "multi-line"
+    ],
+    "react/jsx-boolean-value": [
+      "error",
+      "never"
+    ],
     "react/prop-types": "off",
-    "max-len": ["error", { "code": 120, "ignorePattern": "^import .*?|^export .*?" }],
-    "no-console": ["error", { "allow": ["warn", "error"] }],
+    "max-len": [
+      "error",
+      {
+        "code": 120,
+        "ignorePattern": "^import .*?|^export .*?"
+      }
+    ],
+    "no-console": [
+      "error",
+      {
+        "allow": [
+          "warn",
+          "error"
+        ]
+      }
+    ],
     "import/order": "error",
     "sort-keys": "off",
-    "no-restricted-imports": ["error", { "patterns": ["../*"] }],
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          "../*"
+        ]
+      }
+    ],
     "react-hooks/rules-of-hooks": "error",
     "react-hooks/exhaustive-deps": [
       "error",
@@ -46,8 +75,14 @@
         "additionalHooks": "(useAsync*)"
       }
     ],
-    "eqeqeq": ["error", "smart"],
-    "quotes": ["error", "single"]
+    "eqeqeq": [
+      "error",
+      "smart"
+    ],
+    "quotes": [
+      "error",
+      "single"
+    ]
   },
   "settings": {
     "react": {
