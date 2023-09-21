@@ -1,6 +1,6 @@
 {
   "manifest_version": 1,
-  "version": "1.0.4",
+  "version": "1.0.5",
   "type": "APP",
   "name": {
     "ja": "kintone spreadsheet editor",
@@ -11,6 +11,11 @@
     "en": "SpreadSheet Editor for kintone"
   },
   "icon": "image/icon.png",
+  "homepage_url": {
+    "ja":"https://cybozu.dev/ja/kintone/tips/development/plugins/sample-plugin/spreadsheet-plugin/",
+    "en":"https://cybozu.dev/ja/kintone/tips/development/plugins/sample-plugin/spreadsheet-plugin/",
+    "zh":"https://cybozu.dev/ja/kintone/tips/development/plugins/sample-plugin/spreadsheet-plugin/"
+  },
   "desktop": {
     "js": [
       "dist/main.bundle.js"
