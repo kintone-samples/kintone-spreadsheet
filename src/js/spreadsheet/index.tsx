@@ -4,7 +4,6 @@ import Handsontable from 'handsontable';
 import 'handsontable/dist/handsontable.full.css';
 import { useAsync } from 'react-use';
 import styled from '@emotion/styled';
-import { Alert } from '@kintone/kintone-ui-component';
 import { useTranslation } from 'react-i18next';
 import ReactDOM from 'react-dom';
 import { Config } from '~/src/js/config';
@@ -126,7 +125,6 @@ const getColumnData = async (config: Config, appId: number, onChange: any) => {
   });
 
   // データスキーマの作成
-  // const dataSchema: Handsontable.RowObject = config.columns.reduce((prev, { code }) => {
   const dataSchema = config.columns.reduce((prev, { code }) => {
     return {
       ...prev,
@@ -306,7 +304,7 @@ export const SpreadSheet: React.FC<Props> = ({
 }) => {
   return (
     <Wrapper>
-      {errorMessages && <Alert isVisible text={errorMessages} />}
+      {errorMessages}
       {isLoading && <Loader />}
       <MemoedHotTable
         hotRef={hotRef}

@@ -1,11 +1,17 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { Button, Text, Alert, Label } from '@kintone/kintone-ui-component';
 import '~/src/css/51-us-default.scss';
 import './styles.scss';
-import FormFieldSelectTable, { OnChange as FormFieldSelectTableOnChange, FormField } from './FormFieldSelectTable';
 import '~/src/js/utils/i18n';
+import { KucBase } from 'kintone-ui-component/lib/base/kuc-base';
+import KucText from './kucText';
+import KucButton from './kucButton';
+import KucTable from './kucTable';
+
+interface FormField {
+  code: string;
+}
 
 export interface Config {
   elementId: string;
@@ -39,72 +45,15 @@ const useConfig = (pluginId: string) => {
   }, [i18n]);
   const restoredConfig = kintone.plugin.app.getConfig(pluginId);
 
-  const [config, setConfig] = useState<Config>(
-    // restore from parsed configuration
-    restoredConfig.config
-      ? {
-          ...emptyConfig,
-          ...JSON.parse(restoredConfig.config),
-        }
-      : emptyConfig,
-  );
-  const [showAlert, setShowAlert] = useState<boolean>(false);
-
-  const onChangeElementId = useCallback(
-    (value: string | null) =>
-      setConfig((config) => ({
-        ...config,
-        elementId: value || '',
-      })),
-    [],
-  );
-
-  const onChangeAutoRenewalInterval = useCallback((value: string | null) => {
-    setConfig((config) => ({
-      ...config,
-      autoReloadInterval: Number.isInteger(Number(value)) ? Number(value) : 0,
-    }));
-  }, []);
-
-  // TODO: Loadingなど表示
-  const onSubmit = useCallback(() => {
-    setShowAlert(false);
-    const validConfig: Config = {
-      ...config,
-      autoReloadInterval:
-        config.autoReloadInterval > emptyConfig.autoReloadInterval
-          ? config.autoReloadInterval
-          : emptyConfig.autoReloadInterval,
-    };
-    kintone.plugin.app.setConfig(
-      {
-        config: JSON.stringify(validConfig),
-      },
-      () => {
-        setConfig(validConfig);
-        setShowAlert(true);
-      },
-    );
-  }, [config]);
-
-  const onCancel = useCallback(() => {
-    history.back();
-  }, []);
-
-  const onChange = useCallback<FormFieldSelectTableOnChange>(
-    (selectedFields) => setConfig((config) => ({ ...config, columns: selectedFields })),
-    [],
-  );
+  const ret = restoredConfig.config
+    ? {
+        ...emptyConfig,
+        ...JSON.parse(restoredConfig.config),
+      }
+    : emptyConfig;
 
   return {
-    config,
-    onChangeElementId,
-    onChangeAutoRenewalInterval,
-    onChange,
-    onSubmit,
-    onCancel,
-    showAlert,
-    onClickAlert: useCallback(() => setShowAlert(false), []),
+    config: ret,
     t,
   };
 };
@@ -113,20 +62,58 @@ interface Props {
   pluginId: string;
 }
 
+interface DataObject {
+  field: string;
+}
+interface KucElement extends KucBase {
+  data: DataObject[] | null;
+  value: string;
+}
+interface Column {
+  code: string;
+}
+
+// KucButton event
+const onButtonClickEvent = async () => {
+  const columnsArray: Column[] = [];
+  const kucTable = document.getElementById('tableId') as KucElement;
+  const tableData: DataObject[] | null = kucTable?.data;
+  tableData?.forEach((data) => {
+    const column: Column = {
+      code: data.field,
+    };
+    columnsArray.push(column);
+  });
+
+  const txtElementId = document.getElementById('textId') as KucElement;
+  const txtAutoReloadInterval = document.getElementById('autoReloadInterval') as KucElement;
+  const config = {
+    elementId: txtElementId?.value,
+    columns: columnsArray,
+    autoReloadInterval: txtAutoReloadInterval?.value,
+  };
+
+  fetch('/kintone-plugin-spreadsheet/config', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(config),
+  });
+
+  await kintone.plugin.app.setConfig({
+    config: JSON.stringify(config),
+  });
+};
+
+const onCancelClickEvent = () => {
+  history.back();
+};
+
 const Config: React.FC<Props> = ({ pluginId }) => {
-  const {
-    config,
-    onChangeElementId,
-    onChangeAutoRenewalInterval,
-    onChange,
-    onSubmit,
-    onCancel,
-    showAlert,
-    onClickAlert,
-    t,
-  } = useConfig(pluginId);
+  const { config, t } = useConfig(pluginId);
   return (
-    <div id="form" className="colorcell-plugin">
+    <div>
       <div className="kintoneplugin-row">
         <h2 className="kintoneplugin-label">{t('config.section1.header')}</h2>
         <p>{t('config.section1.body')}</p>
@@ -138,22 +125,21 @@ const Config: React.FC<Props> = ({ pluginId }) => {
       </div>
       <div className="kintoneplugin-row">
         <h2 className="kintoneplugin-label">{t('config.section2.header')}</h2>
-        <Text value={config.elementId} onChange={onChangeElementId} />
+        <KucText id="textId" value={config.elementId}></KucText>
       </div>
       <div className="kintoneplugin-row">
         <h2 className="kintoneplugin-label">{t('config.section3.header')}</h2>
-        <FormFieldSelectTable onChange={onChange} defaultSelectedFields={config.columns} />
+        <KucTable id="tableId" label="テーブル" config={config}></KucTable>
       </div>
       <div className="kintoneplugin-row">
         <h2 className="kintoneplugin-label">{t('config.auto_reload.header')}</h2>
-        <Label text={t('config.auto_reload.description')}></Label>
-        <Text value={config.autoReloadInterval.toString()} onChange={onChangeAutoRenewalInterval} />
+        <span>{t('config.auto_reload.description')}</span>
+        <KucText id="autoReloadInterval" value={config.autoReloadInterval.toString()} />
       </div>
       <div className="kintoneplugin-row form-control">
-        <Button type="submit" text={t('common.save')} onClick={onSubmit} />{' '}
-        <Button onClick={onCancel} text={t('common.cancel')} />
+        <KucButton id="buttonId" type="submit" text="設定保存" onClick={onButtonClickEvent}></KucButton>
+        <KucButton id="cancelButtonId" type="normal" text="キャンセル" onClick={onCancelClickEvent}></KucButton>
       </div>
-      <Alert text={t('config.success')} type="success" isVisible={showAlert} onClick={onClickAlert} />
     </div>
   );
 };
