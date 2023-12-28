@@ -34,7 +34,7 @@ export const isValidConfig = (config: unknown): config is Config => {
 
 export const emptyConfig: Config = {
   elementId: 'sheet',
-  columns: [],
+  columns: [{ code: '' }],
   autoReloadInterval: 10, // sec
 };
 
@@ -145,6 +145,6 @@ const Config: React.FC<Props> = ({ pluginId }) => {
 };
 
 ((PLUGIN_ID) => {
-  const targetElement = document.getElementById('kintone-spreadsheet-config');
+  const targetElement = document.getElementById('kintone-plugin-config');
   targetElement && ReactDOM.render(<Config pluginId={PLUGIN_ID} />, targetElement);
 })(kintone.$PLUGIN_ID);
