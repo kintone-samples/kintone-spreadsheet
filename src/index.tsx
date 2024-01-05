@@ -22,7 +22,7 @@ const SettingError: React.FC = () => {
   useEffect(() => {
     i18n.changeLanguage(kintone.getLoginUser().language);
   }, [i18n]);
-  return <></>;
+  return <div style={{ color: 'red' }}>{t('errors.plugin_no_setting_error')}</div>;
 };
 
 ((PLUGIN_ID) => {
