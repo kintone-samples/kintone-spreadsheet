@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "webpack": "webpack",
-    "source .env && echo PPK=$PPK && kintone-plugin-packer src --ppk $PPK",
+    "package": "source .env && echo PPK=$PPK && kintone-plugin-packer src --ppk $PPK",
     "upload": "source .env && kintone-plugin-uploader --base-url $BASE_URL --username $USERNAME --password $PASSWORD plugin.zip",
     "build": "yarn webpack && yarn package",
     "watch": "yarn webpack --watch",
