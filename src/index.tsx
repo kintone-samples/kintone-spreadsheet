@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { Alert } from '@kintone/kintone-ui-component';
 import 'handsontable/dist/handsontable.full.css';
 import { fetchConfig } from './js/utils/utils';
 import { isValidConfig, Config } from '~/src/js/config';
@@ -23,7 +22,7 @@ const SettingError: React.FC = () => {
   useEffect(() => {
     i18n.changeLanguage(kintone.getLoginUser().language);
   }, [i18n]);
-  return <Alert isVisible text={t('errors.plugin_no_setting_error')} />;
+  return <div style={{ color: 'red' }}>{t('errors.plugin_no_setting_error')}</div>;
 };
 
 ((PLUGIN_ID) => {
