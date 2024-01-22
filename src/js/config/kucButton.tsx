@@ -1,4 +1,4 @@
-import 'kintone-ui-component';
+import { version } from 'kintone-ui-component';
 import { KucBase } from 'kintone-ui-component/lib/base/kuc-base';
 import React, { useEffect, useRef } from 'react';
 
@@ -30,9 +30,11 @@ const KucButton = (props: {
     }
   }, [kucButtonRef, props.onClick]);
 
+  const KUCButton = `kuc-button-${version.replace(/\./g, '-')}`;
+
   return (
     <>
-      <kuc-button-1-12-0 ref={kucButtonRef} id={props.id} text={props.text} type={props.type}></kuc-button-1-12-0>
+      <KUCButton ref={kucButtonRef} id={props.id} text={props.text} type={props.type}></KUCButton>
     </>
   );
 };
