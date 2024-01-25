@@ -1,4 +1,4 @@
-import 'kintone-ui-component';
+import { version } from 'kintone-ui-component';
 import { KucBase } from 'kintone-ui-component/lib/base/kuc-base';
 import React, { useEffect, useRef, useState } from 'react';
 import { client } from '~/src/js/utils/client';
@@ -46,9 +46,11 @@ const KucDropdown = (props: { value: string; onBlur?: null }) => {
     fetchData(dropdown);
   }, [kucDropdownRef, props.value]);
 
+  const KUCDropdown = `kuc-dropdown-${version.replace(/\./g, '-')}`;
+
   return (
     <div style={{ display: 'inline-flex' }}>
-      <kuc-dropdown-1-12-0 ref={kucDropdownRef} onBlur={props.onBlur} value={props.value}></kuc-dropdown-1-12-0>
+      <KUCDropdown ref={kucDropdownRef} onBlur={props.onBlur} value={props.value}></KUCDropdown>
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import exp from 'constants';
-import 'kintone-ui-component';
+import { version } from 'kintone-ui-component';
 import { KucBase } from 'kintone-ui-component/lib/base/kuc-base';
 import React, { useEffect, useRef } from 'react';
 
@@ -36,9 +36,11 @@ const KucText = (props) => {
     }
   }, [kucTextRef, props.onChange, props.onFocus, props.onInput]);
 
+  const KUCTable = `kuc-text-${version.replace(/\./g, '-')}`;
+
   return (
     <div>
-      <kuc-text-1-12-0
+      <KUCTable
         ref={kucTextRef}
         className={props.className}
         error={props.error}
@@ -52,7 +54,7 @@ const KucText = (props) => {
         disabled={props.disabled}
         requiredIcon={props.requiredIcon}
         visible={props.visible}
-      ></kuc-text-1-12-0>
+      ></KUCTable>
     </div>
   );
 };

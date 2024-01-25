@@ -1,4 +1,4 @@
-import 'kintone-ui-component';
+import { version } from 'kintone-ui-component';
 import React, { useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { KucBase } from 'kintone-ui-component/lib/base/kuc-base';
@@ -49,16 +49,18 @@ const KucTable = (props) => {
     }
   }, [kucTableRef, props.config.columns, props.onChange]);
 
+  const KUCTable = `kuc-table-${version.replace(/\./g, '-')}`;
+
   return (
     <div>
-      <kuc-table-1-12-0
+      <KUCTable
         ref={kucTableRef}
         className={props.className}
         id={props.id}
         label={props.label}
         actionButton={props.actionButton}
         visible={props.visible}
-      ></kuc-table-1-12-0>
+      ></KUCTable>
     </div>
   );
 };
