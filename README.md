@@ -66,3 +66,33 @@ MIT
 ## Copyright
 
 Copyright(c) Cybozu, Inc.
+
+## OSS License
+
+- Emotion - https://emotion.sh/docs/introduction
+  - Author: Emotion team and other contributors
+  - License: [MIT License](https://github.com/emotion-js/emotion/blob/jest-emotion%4011.0.0/LICENSE)
+- kintone UI Component - https://kintone-labs.github.io/kintone-ui-component/
+  - Author: Cybozu, Inc.
+  - License: [MIT License](https://github.com/kintone-labs/kintone-ui-component/blob/v1.13.0/LICENSE)
+- kintone REST API Client - https://github.com/kintone/js-sdk/tree/master/packages/rest-api-client
+  - Author: Cybozu, Inc.
+  - License: [MIT License](https://github.com/kintone/js-sdk/blob/%40kintone/rest-api-client%403.3.3/packages/rest-api-client/LICENSE)
+- Hansontable - https://handsontable.com/
+  - Author: Marcin Warpechowski
+  - License: [MIT License](https://github.com/handsontable/handsontable/blob/6.2.2/LICENSE)
+- i18next - https://www.i18next.com
+  - Author: i18next
+  - License: [MIT License](https://github.com/i18next/i18next/blob/v22.4.11/LICENSE)
+- React - https://react.dev/
+  - Author: Facebook, Inc. and its affiliates.
+  - License: [MIT License](https://github.com/facebook/react/blob/v16.13.1/LICENSE)
+- react-i18next - https://react.i18next.com/
+  - Author: i18next
+  - License: [MIT License](https://github.com/i18next/react-i18next/blob/v12.2.0/LICENSE)
+- react-page-visibility - https://github.com/pgilad/react-page-visibility
+  - Author: Gilad Peleg
+  - License: [MIT License](https://github.com/pgilad/react-page-visibility/blob/v7.0.0/LICENSE)
+- react-use - https://github.com/streamich/react-use
+  - Author: streamich
+  - License: [The Unlicense](https://github.com/streamich/react-use/blob/v17.4.0/LICENSE)
