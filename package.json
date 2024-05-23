@@ -36,7 +36,7 @@
     "@babel/core": "7.21.0",
     "@kintone/dts-gen": "6.1.20",
     "@kintone/plugin-packer": "^8.0.3",
-    "@kintone/plugin-uploader": "7.1.8",
+    "@kintone/plugin-uploader": "^9.1.1",
     "@types/node": "18.14.0",
     "@types/react": "18.0.28",
     "@types/react-dom": "18.0.11",
