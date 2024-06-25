@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import ReactDOM from 'react-dom';
+import ReactDOM from 'react-dom/client';
 import { useTranslation } from 'react-i18next';
 import '~/src/css/51-us-default.scss';
 import './styles.scss';
@@ -146,5 +146,8 @@ const Config: React.FC<Props> = ({ pluginId }) => {
 
 ((PLUGIN_ID) => {
   const targetElement = document.getElementById('kintone-plugin-config');
-  targetElement && ReactDOM.render(<Config pluginId={PLUGIN_ID} />, targetElement);
+  if (targetElement) {
+    const configRoot = ReactDOM.createRoot(targetElement);
+    configRoot.render(<Config pluginId={PLUGIN_ID} />);
+  }
 })(kintone.$PLUGIN_ID);

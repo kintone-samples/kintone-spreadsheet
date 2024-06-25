@@ -1,6 +1,6 @@
 import { version } from 'kintone-ui-component';
 import React, { useEffect, useRef } from 'react';
-import ReactDOM from 'react-dom';
+import ReactDOM from 'react-dom/client';
 import { KucBase } from 'kintone-ui-component/lib/base/kuc-base';
 import KucDropdown from './kucDropdown';
 
@@ -28,7 +28,8 @@ const KucTable = (props) => {
       const setValue = !cellData ? '---' : cellData;
       const spanElement = document.createElement('span');
       const dropdown = <KucDropdown value={setValue}></KucDropdown>;
-      ReactDOM.render(dropdown, spanElement);
+      const dropdownRoot = ReactDOM.createRoot(spanElement);
+      dropdownRoot.render(dropdown);
       return spanElement;
     };
 
