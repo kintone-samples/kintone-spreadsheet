@@ -2,9 +2,11 @@ import path from 'path';
 import { Configuration } from 'webpack';
 import TerserPlugin from 'terser-webpack-plugin';
 import { exec } from 'child_process';
-import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
+import dotenv from 'dotenv';
+dotenv.config();
 
-const DEBUG = process.env.NODE_ENV !== 'production';
+const DEBUG = process.env.MODE !== 'production';
+console.log(`DEBUG:${process.env.MODE}`);
 
 const config: Configuration = {
   mode: DEBUG ? 'development' : 'production',
