@@ -6,7 +6,6 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const DEBUG = process.env.MODE !== 'production';
-console.log(`DEBUG:${process.env.MODE}`);
 
 const config: Configuration = {
   mode: DEBUG ? 'development' : 'production',
