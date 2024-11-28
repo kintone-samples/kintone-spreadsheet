@@ -6,7 +6,7 @@
   "scripts": {
     "webpack": "webpack",
     "package": "dotenv cross-var \"npx kintone-plugin-packer src --ppk %PPK%\"",
-    "upload": "dotenv cross-var \"npx kintone-plugin-uploader --base-url %BASE_URL% --username %USERNAME% --password %PASSWORD% plugin.zip\"",
+    "upload": "dotenv cross-var \"npx kintone-plugin-uploader --base-url %BASE_URL% --username %LOGINID% --password %PASSWORD% plugin.zip\"",
     "build": "yarn webpack && yarn package",
     "watch": "yarn webpack --watch",
     "lint": "yarn eslint src/**/*.tsx src/**/*.ts"
