@@ -10,7 +10,7 @@ kintone の一覧画面を Excel のようなスプレッドシートの見た�
 ![イメージ](https://raw.githubusercontent.com/mura-/kintone-spreadsheet-no-longer-maintained/master/image.gif)
 
 [DEMO](https://dev-demo.cybozu.com/k/39/)  
-デモ環境についての説明は [こちら](https://cybozudev.zendesk.com/hc/ja/articles/208217653)  
+デモ環境についての説明は [こちら](https://cybozu.dev/ja/id/d149e606f6b6deee612013d2/)  
 （DEMO はスプレッドシートの挙動確認のみ。設定はできません）
 
 ## Features
@@ -30,8 +30,8 @@ kintone の一覧画面を Excel のようなスプレッドシートの見た�
 ## Installation
 
 1. プラグインを[Download する](https://github.com/mura-/kintone-spreadsheet/releases/)
-1. プラグインを[インポートする](https://help.cybozu.com/ja/k/admin/plugin.html)
-1. プラグインの設定をする
+1. プラグインを[インポートする](https://jp.cybozu.help/k/ja/id/0408.html)
+1. [プラグインの設定](https://jp.cybozu.help/k/ja/id/040566.html)をする
 
 ## How to edit this plugin
 
@@ -44,7 +44,7 @@ kintone の一覧画面を Excel のようなスプレッドシートの見た�
 1. ビルド  
    `yarn run build`
 
-※プラグインの作成手順については[こちら](https://cybozudev.zendesk.com/hc/ja/articles/203455680-kintone-%E3%83%97%E3%83%A9%E3%82%B0%E3%82%A4%E3%83%B3%E9%96%8B%E7%99%BA%E6%89%8B%E9%A0%86)
+※プラグインの作成手順については[こちら](https://cybozu.dev/ja/id/76c0f6daa0367b055a444f93/)
 
 ### 開発モード
 
@@ -72,7 +72,7 @@ Copyright(c) Cybozu, Inc.
 - Emotion - https://emotion.sh/docs/introduction
   - Author: Emotion team and other contributors
   - License: [MIT License](https://github.com/emotion-js/emotion/blob/jest-emotion%4011.0.0/LICENSE)
-- kintone UI Component - https://kintone-labs.github.io/kintone-ui-component/
+- kintone UI Component - https://github.com/kintone-labs/kintone-ui-component
   - Author: Cybozu, Inc.
   - License: [MIT License](https://github.com/kintone-labs/kintone-ui-component/blob/v1.13.0/LICENSE)
 - kintone REST API Client - https://github.com/kintone/js-sdk/tree/master/packages/rest-api-client
