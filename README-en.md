@@ -7,7 +7,7 @@ You can view and edit the kintone list screen with the look of a spreadsheet lik
 ![Image](https://raw.githubusercontent.com/mura-/kintone-spreadsheet-no-longer-maintained/master/image.gif)
 
 [DEMO](https://dev-demo.cybozu.com/k/39/)  
-[a description of the demo environment](https://cybozudev.zendesk.com/hc/ja/articles/208217653)  
+[a description of the demo environment](https://cybozu.dev/ja/id/d149e606f6b6deee612013d2/)  
 (DEMO can only check the befavior of the spreadsheet. Cannot be set)
 
 ## Features
@@ -27,8 +27,8 @@ You can view and edit the kintone list screen with the look of a spreadsheet lik
 ## Installation
 
 1. [Download](https://github.com/mura-/kintone-spreadsheet/releases/) this plugin.
-1. [Import](https://help.cybozu.com/en/k/admin/plugin.html) to your kintone environment.
-1. Configure plugin settings.
+1. [Import](https://jp.cybozu.help/k/en/id/0408.html) to your kintone environment.
+1. [Configure plugin settings](https://jp.cybozu.help/k/en/id/040566.html).
 
 ## How to Edit this plugin
 
@@ -41,7 +41,7 @@ If you want to extend or change the plugin itself, follow the procedure below.
 1. Build
    `yarn run build`
 
-※[How to craete a kintone plugin](https://cybozudev.zendesk.com/hc/ja/articles/203455680-kintone-%E3%83%97%E3%83%A9%E3%82%B0%E3%82%A4%E3%83%B3%E9%96%8B%E7%99%BA%E6%89%8B%E9%A0%86)
+※[How to craete a kintone plugin](https://kintone.dev/en/plugins/introduction-to-plug-ins/plug-in-development-specifications/)
 
 ### Develop mode
 

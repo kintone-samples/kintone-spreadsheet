@@ -10,7 +10,7 @@
 ![图片](https://raw.githubusercontent.com/mura-/kintone-spreadsheet-no-longer-maintained/master/image.gif)
 
 [DEMO](https://dev-demo.cybozu.com/k/39/)  
-关于演示环境的介绍请参考[这里](https://cybozudev.zendesk.com/hc/ja/articles/208217653)  
+关于演示环境的介绍请参考[这里](https://cybozu.dev/ja/id/d149e606f6b6deee612013d2/)  
 （DEMO 仅可尝试操作电子表格。不可设置）
 
 ## Features
@@ -30,8 +30,8 @@
 ## Installation
 
 1. [Download](https://github.com/mura-/kintone-spreadsheet/releases/)插件
-1. [导入](https://help.cybozu.cn/k/zh/admin/system_customization/add_plugin/plugin.html)插件
-1. 设置插件
+1. [导入](https://jp.cybozu.help/k/zh/id/0408.html)插件
+1. [设置插件](https://jp.cybozu.help/k/zh/id/040566.html)
 
 ## How to edit this plugin
 
